@@ -41,8 +41,12 @@ public:
 	Client(const std::string &serverIP = "127.0.0.1", int serverPort = 3457);
 	~Client();
 
-	virtual void createSharedTexture(const std::string, const TextureInfo& info) {}
-	virtual Texture* getSharedTexture(const std::string) { std::cout << "test" << std::endl; return NULL;}
+	virtual void createSharedTexture(const std::string& name, const TextureInfo& info) {}
+	virtual Texture* getSharedTexture(const std::string& name) { 
+		static Texture tex;
+		tex.externalHandle = 29;
+		return &tex;
+	}
 
 private:
 	SOCKET socketFD;
