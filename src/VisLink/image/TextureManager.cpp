@@ -62,7 +62,8 @@ TextureManager::TextureManager() {
 
 	Entity* images = new EntityNode(state->graphicsObjects);
 		Entity* mainImage = new EntityNode(images);
-            mainImage->addComponent(new Image("../sandbox/examples/VulkanSandbox/textures/test.png"));
+            //mainImage->addComponent(new Image("../sandbox/examples/VulkanSandbox/textures/test.png"));
+            mainImage->addComponent(new Image(256, 256, 4));
             mainImage->addComponent(new VulkanExternalImage());
             //mainImage->addComponent(new VulkanImportImage(new_fd));
 
@@ -84,6 +85,7 @@ TextureManager::TextureManager() {
 	}*/
 
 	state->instanceNode.update();
+	state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);
 	state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);
 
     //int newFd = dup(29);
