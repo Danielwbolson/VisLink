@@ -54,28 +54,27 @@ public:
 	virtual const Texture& getTexture() const { return texture; }
 	GLuint id;
 	GLuint mem;
-private:
 	Texture texture;
 };
 
 
-OpenGLTexture* Texture::createOpenGLTexture() {
+OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 	textureInitExtensions();
 
-	int newHandle = dup(externalHandle);
+	int newHandle = dup(tex.externalHandle);
 
-    std::cout << externalHandle << std::endl;
+    std::cout << tex.externalHandle << std::endl;
     GLuint mem = 0;
     GLuint externalTexture = 0;
     glCreateMemoryObjectsEXT(1, &mem);
 #ifdef WIN32
 #else
-    glImportMemoryFdEXT(mem, width*height*components, GL_HANDLE_TYPE_OPAQUE_FD_EXT, newHandle);
+    glImportMemoryFdEXT(mem, tex.width*tex.height*tex.components, GL_HANDLE_TYPE_OPAQUE_FD_EXT, newHandle);
 #endif
     glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 
-    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, width, height, mem, 0 );
-    OpenGLTextureImpl* texture = new OpenGLTextureImpl(*this);
+    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, tex.width, tex.height, mem, 0 );
+    OpenGLTextureImpl* texture = new OpenGLTextureImpl(tex);
     texture->mem = mem;
     texture->id = externalTexture;
 	return texture;

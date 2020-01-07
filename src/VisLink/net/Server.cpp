@@ -178,56 +178,13 @@ Server::Server(int listenPort, int numExpectedClients) {
 }
 
 
-#define LOGD(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
-#define LOGE(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
-#define LOGW(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
 
 int Server::sendfd(int fd) {
     for (int f = 0; f < clientSocketFDs.size(); f++) {
-        sendfd(clientSocketFDs[f], fd);
+        NetInterface::sendfd(clientSocketFDs[f], fd);
     }
 
     return 0;
-}
-
-int Server::sendfd(SOCKET socket, int fd) {
-
-  std::cout << "sendfd " << std::endl;
-    char dummy = '$';
-    struct msghdr msg;
-    struct iovec iov;
-
-    char cmsgbuf[CMSG_SPACE(sizeof(int))];
-
-    iov.iov_base = &dummy;
-    iov.iov_len = sizeof(dummy);
-
-    msg.msg_name = NULL;
-    msg.msg_namelen = 0;
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
-    msg.msg_flags = 0;
-    msg.msg_control = cmsgbuf;
-    msg.msg_controllen = sizeof(cmsgbuf);//CMSG_LEN(sizeof(int));
-
-    std::cout << CMSG_LEN(sizeof(int)) << " " << CMSG_SPACE(sizeof(int)) << " " << sizeof(cmsgbuf) << std::endl;
-
-    struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
-    cmsg->cmsg_level = SOL_SOCKET;
-    cmsg->cmsg_type = SCM_RIGHTS;
-    cmsg->cmsg_len = CMSG_LEN(sizeof(int));
-
-    *(int*) CMSG_DATA(cmsg) = fd;
-
-    std::cout << cmsg << std::endl;
-
-    int ret = sendmsg(socket, &msg, 0);
-
-    if (ret == -1) {
-        LOGE("sendmsg failed with %s", strerror(errno));
-    }
-
-    return ret;
 }
 
 Server::~Server() {

@@ -31,11 +31,11 @@
 using namespace sandbox;
 
 GLFWwindow* window;
-GLuint vbo, vao, vshader, fshader, shaderProgram, texture;
+GLuint vbo, vao, vshader, fshader, shaderProgram, texture, externalTexture;
 EntityNode mainImage;
 int windowXPos = 0;
 
-vislink::OpenGLTexture* externalTexture = NULL;
+//vislink::OpenGLTexture* externalTexture = NULL;
 
 /*#define glCreateMemoryObjectsEXT pfnCreateMemoryObjectsEXT
 PFNGLCREATEMEMORYOBJECTSEXTPROC pfnCreateMemoryObjectsEXT;
@@ -234,11 +234,15 @@ int main(int argc, char**argv) {
 
     bool server = true; 
 
-    vislink::Texture tex;
 	
+    if (argc > 1) {
+        windowXPos = WIDTH;
+    }
+
+    initGLFW();
+
 	//if (pid == 0) {//argc > 1) {
 	if (argc > 1) {
-		windowXPos = WIDTH;
 		vislink::Client* client = new vislink::Client();
 		api = client;
         //close(pair[1]);
@@ -254,27 +258,32 @@ int main(int argc, char**argv) {
 	}
 	else {
 		vislink::Server* server = new vislink::Server();
-		api = server;
+        api = server;
         api->createSharedTexture("hit", vislink::TextureInfo());
-		tex = api->getSharedTexture("hit");
-
-		//close(pair[0]);
-		//sendfd(pair[1], 21);
+        vislink::Texture tex = api->getSharedTexture("hit");
+        server->sendfd(tex.externalHandle);
+		/*tex = api->getSharedTexture("hit");
 
 		server->sendfd(tex.externalHandle);
 
-		externalHandle = tex.externalHandle;
+		externalHandle = tex.externalHandle;*/
 	}
 
-	initGLFW();
+
 	initGL();
 
-    tex.width = 256;
+
+    api = new vislink::VisLinkOpenGL(api);
+    vislink::Texture tex = api->getSharedTexture("hit");
+    std::cout << "Texture id" << tex.id << " " << tex.externalHandle << std::endl;
+    externalTexture = tex.id;
+
+    /*tex.width = 256;
     tex.height = 256;
     tex.components = 4;
     tex.externalHandle = externalHandle;
     //vislink::OpenGLTexture* extTexture = tex.createOpenGLTexture();
-    externalTexture = tex.createOpenGLTexture();
+    externalTexture = vislink::createOpenGLTexture(tex);*/
 /*
 	//api->getSharedTexture("hi");
 	//int externalHandle = api->getSharedTexture("hi")->externalHandle;
@@ -291,7 +300,7 @@ int main(int argc, char**argv) {
 
     glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, SIZE, SIZE, mem, 0 );
 */
-    if (!server) {
+    if (server) {
     	GLuint format = GL_RGBA;
 	    GLuint internalFormat = GL_RGBA;
 	    GLuint type = GL_UNSIGNED_BYTE;
@@ -299,7 +308,7 @@ int main(int argc, char**argv) {
 	    Image* image = mainImage.getComponent<Image>();
 	    /*glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image->getWidth(), image->getHeight(), 0, format, type, image->getData());*/
 
-		glBindTexture(GL_TEXTURE_2D, externalTexture->getId());
+		glBindTexture(GL_TEXTURE_2D, externalTexture);
 	    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->getWidth(), image->getHeight(), internalFormat, type, image->getData());
 
 	    std::cout << "updating texture" << std::endl;
@@ -330,7 +339,7 @@ int main(int argc, char**argv) {
         glBindVertexArray(vao);
         glActiveTexture(GL_TEXTURE0+0);
         //glBindTexture(GL_TEXTURE_2D, texture);
-        glBindTexture(GL_TEXTURE_2D, externalTexture->getId());
+        glBindTexture(GL_TEXTURE_2D, externalTexture);
         //glBindTexture(GL_TEXTURE_2D, color[currentImage]);
         loc = glGetUniformLocation(shaderProgram, "tex");
         glUniform1i(loc, 0);

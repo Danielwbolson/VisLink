@@ -11,11 +11,9 @@ struct TextureInfo {
 	int components;
 };
 
-class OpenGLTexture;
-
 struct Texture : TextureInfo { 
 	unsigned int externalHandle;
-	OpenGLTexture* createOpenGLTexture();
+	unsigned int id;
 };
 
 class OpenGLTexture {
@@ -24,6 +22,8 @@ public:
 	virtual unsigned int getId() const = 0;
 	virtual const Texture& getTexture() const = 0;
 };
+
+OpenGLTexture* createOpenGLTexture(const Texture& texture);
 
 
 }
