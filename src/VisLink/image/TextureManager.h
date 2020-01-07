@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include "VisLink/image/Texture.h"
 
 namespace vislink {
 
@@ -13,7 +14,8 @@ public:
 	TextureManager();
 	~TextureManager();
 
-	int externalHandle;
+	void createSharedTexture(const std::string& name, const TextureInfo& info);
+	Texture getSharedTexture(const std::string& name);
 
 private:
     TextureManagerState* state;

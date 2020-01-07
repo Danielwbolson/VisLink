@@ -38,6 +38,7 @@ public:
 			deviceNode->addComponent(new VulkanDevice(&instanceNode));
 			deviceNode->addComponent(graphicsQueue);
 			graphicsObjects = new EntityNode(deviceNode);
+				images = new EntityNode(graphicsObjects);
 			Entity* updateNode = new EntityNode(deviceNode);
 				updateNode->addComponent(new VulkanCommandPool(graphicsQueue));
 				renderer = new VulkanDeviceRenderer();
@@ -49,6 +50,9 @@ public:
 	Entity* deviceNode;
 	Entity* graphicsObjects;
 	VulkanDeviceRenderer* renderer;
+	Entity* images;
+
+	std::map<std::string, Entity*> imageMap;
 };
 
 
@@ -57,55 +61,45 @@ public:
 TextureManager::TextureManager() {
 	state = new TextureManagerState();
 
-	//int new_fd = open("/proc/15844/fd/30", O_RDONLY);
-    //std::cout << "again" << new_fd << std::endl;
+	//createSharedTexture("test", TextureInfo());
+	/*Entity* mainImage = new EntityNode(state->images);
+        mainImage->addComponent(new Image(256, 256, 4));
+        mainImage->addComponent(new VulkanExternalImage());
 
-	Entity* images = new EntityNode(state->graphicsObjects);
-		Entity* mainImage = new EntityNode(images);
-            //mainImage->addComponent(new Image("../sandbox/examples/VulkanSandbox/textures/test.png"));
-            mainImage->addComponent(new Image(256, 256, 4));
-            mainImage->addComponent(new VulkanExternalImage());
-            //mainImage->addComponent(new VulkanImportImage(new_fd));
-
-	/*VkExternalMemoryHandleTypeFlagsNV handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT;
-	VkExternalImageFormatPropertiesNV extProperties;
-	VkResult res = vkGetPhysicalDeviceExternalImageFormatPropertiesNV(
-	    state->deviceNode->getComponent<VulkanDevice>()->getPhysicalDevice(),
-	    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-	    handleType,
-	    &extProperties);*/
-
-	/*VkPhysicalDeviceMemoryProperties properties;
-	vkGetPhysicalDeviceMemoryProperties(state->deviceNode->getComponent<VulkanDevice>()->getPhysicalDevice(), &properties);
-    if ((properties.externalMemoryProperties.externalMemoryFeatures & VK_EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT) == 0) {
-    	std::cout << "supported" << std::endl;
-	}
-	else {
-    	std::cout << "not supported" << std::endl;
-	}*/
 
 	state->instanceNode.update();
 	state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);
-	state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);
-
-    //int newFd = dup(29);
-    //std::cout << newFd << std::endl;
-
-    //int newFd = dup(29);
-    //std::cout << newFd << std::endl;
-
-                //int externalHandle =  mainImage2->getComponent<VulkanImage>()->getExternalHandle(sharedRenderer2->getContext());
-                //std::cout << externalHandle << std::endl;
-                /*GLuint mem = 0;
-                glCreateMemoryObjectsEXT(1, &mem);
-                glImportMemoryFdEXT(mem, mainImage2->getComponent<Image>()->getSize(), GL_HANDLE_TYPE_OPAQUE_FD_EXT, externalHandle);*/
-
-
 	externalHandle = mainImage->getComponent<VulkanExternalImage>()->getExternalHandle(state->renderer->getContext());
+	//state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);*/
+
 }
 
 TextureManager::~TextureManager() {
 	delete state;
+}
+
+void TextureManager::createSharedTexture(const std::string& name, const TextureInfo& info) {
+
+	Entity* image = new EntityNode(state->images);
+        image->addComponent(new Image(256, 256, 4));
+        image->addComponent(new VulkanExternalImage());
+
+	state->instanceNode.update();
+	state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);
+
+    state->imageMap[name] = image;
+	//externalHandle = 
+}
+
+Texture TextureManager::getSharedTexture(const std::string& name) {
+	Entity* imageNode = state->imageMap[name];
+	Image* image = imageNode->getComponent<Image>();
+	Texture tex;
+	tex.width = image->getWidth();
+	tex.height = image->getHeight();
+	tex.components = image->getComponents();
+	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->renderer->getContext());
+	return tex;
 }
 
 }

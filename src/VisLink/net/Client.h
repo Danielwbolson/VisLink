@@ -43,10 +43,9 @@ public:
 	~Client();
 
 	virtual void createSharedTexture(const std::string& name, const TextureInfo& info) {}
-	virtual Texture* getSharedTexture(const std::string& name) { 
+	virtual Texture getSharedTexture(const std::string& name) { 
 		static Texture tex;
-		tex.externalHandle = 29;
-		return &tex;
+		return tex;
 	}
 
 	int recvfd();

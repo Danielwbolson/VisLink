@@ -8,6 +8,7 @@ include(${CMAKE_FRAMEWORK_DIR}/project/project.cmake)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 set (SOURCEFILES
+  image/Texture.cpp
   image/TextureManager.cpp
   net/Client.cpp
   net/Server.cpp
