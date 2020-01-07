@@ -110,22 +110,26 @@ Server::Server(int listenPort, int numExpectedClients) {
 #else  // BSD sockets implementation
 
     int yes=1;
-    int serv_fd;
+
+    int serv_fd, client_sockfd;
+    int server_len;
+    struct sockaddr_un serv_addr;
     
-    if ((serv_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    unlink("server_socket");
+    if ((serv_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
   		std::cout << "cannot create a socket. socket(AF_INET, SOCK_STREAM, 0) failed" << std::endl;
         exit(1);
     }
+
 
     if (setsockopt(serv_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
   		std::cout << "setsockopt() failed. Check for a problem with networking." << std::endl;
         exit(1);
     }
     
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(listenPort);
+    serv_addr.sun_family = AF_UNIX;
+    strcpy(serv_addr.sun_path, "server_socket");
+    server_len = sizeof(serv_addr);
     
     if (::bind(serv_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1) {
   		std::cout << "bind() failed. Check for a problem with networking." << std::endl;
@@ -141,7 +145,7 @@ Server::Server(int listenPort, int numExpectedClients) {
     std::cout << "listening for client connection(s) on port " << listenPort << "..." << std::endl;
     
     socklen_t client_len;
-    struct sockaddr_in client_addr;
+    struct sockaddr_un client_addr;
     int client_fd;
     
     int numConnected = 0;
@@ -154,15 +158,15 @@ Server::Server(int listenPort, int numExpectedClients) {
         }
         
         // Disable Nagle's algorithm on the client's socket
-        setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
+        //setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
         
         numConnected++;
         
-        char clientname[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &client_addr.sin_addr, clientname, sizeof(clientname));
+        //char clientname[INET_ADDRSTRLEN];
+        //inet_ntop(AF_INET, &client_addr.sin_addr, clientname, sizeof(clientname));
         
         std::stringstream s;
-        s << "Received connection " << numConnected << " of " << numExpectedClients << " from " << clientname;
+        s << "Received connection " << numConnected << " of " << numExpectedClients << " from " << "clientname";
         std::cout << s.str() << std::endl;
         
         clientSocketFDs.push_back(client_fd);

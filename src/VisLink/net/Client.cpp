@@ -95,7 +95,7 @@ Client::Client(const std::string &serverIP, int serverPort)
 
 
 #else  // BSD sockets implementation
-
+/*//"server_socket"
   int sockfd;
   struct addrinfo hints, *servinfo, *p;
   int rv;
@@ -151,7 +151,38 @@ Client::Client(const std::string &serverIP, int serverPort)
   setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
 
   socketFD = sockfd;
+  */
+
+    int sockfd;
+    int len;
+    struct sockaddr_un address;
+    int result;
+
+/*  Create a socket for the client.  */
+
+    sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+
+/*  Name the socket, as agreed with the server.  */
+
+    address.sun_family = AF_UNIX;
+    strcpy(address.sun_path, "server_socket");
+    len = sizeof(address);
+
+/*  Now connect our socket to the server's socket.  */
+    result = -1;
+
+    while(result < 0) {
+      result = connect(sockfd, (struct sockaddr *)&address, len);
+
+      if(result == -1) {
+          perror("oops: client1");
+          //exit(1);
+      }
+    }
+
+    socketFD = sockfd;
 #endif
+
 }
 
 

@@ -372,7 +372,7 @@ int main(int argc, char**argv) {
 
     cout << "started..." << endl;
 
-	int pair[2];
+	/*int pair[2];
     if (socketpair(PF_UNIX, SOCK_DGRAM, 0, pair) < 0) {
         cout << "socketpair failed" << endl;
         return 1;
@@ -382,18 +382,21 @@ int main(int argc, char**argv) {
  	if ((pid = fork()) < 0) {
         cout << "fork failed" << endl;
         return 1;
-    }
+    }*/
 
     int externalHandle;
 	
-	if (pid == 0) {//argc > 1) {
+	//if (pid == 0) {//argc > 1) {
+	if (argc > 1) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
-        close(pair[1]);
-		int fd = recvfd(pair[0]);
-		std::cout <<"recvfd " << fd << std::endl;
+        //close(pair[1]);
+		//int fd = recvfd(pair[0]);
+		//std::cout <<"recvfd " << fd << std::endl;
 		//int externalHandle = client->recvfd();
 		//std::cout << "Clientfd: " << externalHandle << std::endl;
+		int fd = client->recvfd();
+		std::cout <<"recvfd " << fd << std::endl;
 		externalHandle = fd;
 		//exit(0);
 	}
@@ -402,10 +405,10 @@ int main(int argc, char**argv) {
 		api = server;
 		externalHandle = api->getSharedTexture("hi")->externalHandle;
 
-		close(pair[0]);
-		sendfd(pair[1], 21);
+		//close(pair[0]);
+		//sendfd(pair[1], 21);
 
-		//server->sendfd(29);
+		server->sendfd(externalHandle);
 	}
 
 	initGLFW();
