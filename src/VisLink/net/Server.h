@@ -38,11 +38,14 @@ namespace vislink {
 
 class Server : public VisLinkAPIImpl {
 public:
-	Server(int listenPort = 3457, int numExpectedClients = 0);
+	Server(int listenPort = 3457, int numExpectedClients = 1);
 	~Server();
 
 	//virtual void createSharedTexture(const std::string, const TextureInfo& info) {}
 	//virtual Texture* getSharedTexture(const std::string) {return NULL;}
+
+	int sendfd(int fd);
+	int sendfd(SOCKET socket, int fd);
 
 private:
 	std::vector<SOCKET> clientSocketFDs;

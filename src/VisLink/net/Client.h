@@ -48,6 +48,9 @@ public:
 		return &tex;
 	}
 
+	int recvfd();
+	int recvfd(int socket);
+
 private:
 	SOCKET socketFD;
 };
