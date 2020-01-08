@@ -13,5 +13,6 @@ endif()
 
 include(${CMAKE_FRAMEWORK_DIR}/project/MainProject.cmake)
 
-add_subdirectory(app)
 add_subdirectory(src/VisLink)
+add_subdirectory(app)
+add_subdirectory(examples/NoSockets)
