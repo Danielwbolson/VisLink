@@ -42,18 +42,59 @@
 #endif
 
 #include "VisLink/VisLinkAPI.h"
+#include <vector>
 
 namespace vislink {
+
+//#define NET_SIZEOFINT 4
+
+enum NetMessageType {
+	MSG_none = 0,
+	MSG_createSharedTexture = 1,
+	MSG_getSharedTexture = 2
+};
 
 class NetInterface : public VisLinkAPI {
 public:
 	virtual ~NetInterface() {}
 	
+	void sendMessage(SOCKET s, NetMessageType type, const unsigned char *data, int len);
+	NetMessageType receiveMessage(SOCKET s, int& len);
 	int sendData(SOCKET s, const unsigned char *buf, int len);
 	int receiveData(SOCKET s, unsigned char *buf, int len);
 	int sendfd(SOCKET socket, int fd);
 	int recvfd(SOCKET socket);
 
+	/// return 0 for big endian, 1 for little endian.
+	/// http://stackoverflow.com/questions/12791864/c-program-to-check-little-vs-big-endian
+	/*static bool isLittleEndian() {
+		volatile uint32_t i=0x01234567;
+		return (*((uint8_t*)(&i))) == 0x67;
+	}
+
+	static void packInt(unsigned char *bytePtr, int32_t toPack) {
+		unsigned char *p = (unsigned char *) &toPack;
+		for (int i=0;i<NET_SIZEOFINT;i++) {
+			int index = i;
+			if (!isLittleEndian()) {
+				index = NET_SIZEOFINT - i - 1;
+			}
+			bytePtr[i] = p[index];
+		}
+	}
+
+	static int32_t unpackInt(unsigned char *bytePtr) {
+		int toReturn = 0;
+		unsigned char *p = (unsigned char *) &toReturn;
+		for (int i=0;i<NET_SIZEOFINT;i++) {
+			int index = i;
+			if (!isLittleEndian()) {
+				index = NET_SIZEOFINT - i - 1;
+			}
+			p[i] = bytePtr[index];
+		}
+		return toReturn;
+	}*/
 };
 
 }

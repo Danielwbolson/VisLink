@@ -191,7 +191,7 @@ void initGL() {
             GLuint type = GL_UNSIGNED_BYTE;
 
             glGenTextures(1, &texture);
-            mainImage.addComponent(new Image("../sandbox/examples/VulkanSandbox/textures/test.png"));
+            mainImage.addComponent(new Image("app/textures/test.png"));
             mainImage.update();
             glBindTexture(GL_TEXTURE_2D, texture);
             Image* image = mainImage.getComponent<Image>();
@@ -214,14 +214,9 @@ int main(int argc, char**argv) {
 
 	vislink::VisLinkAPI* api = NULL;
 
-
     cout << "started..." << endl;
 
-	/*int pair[2];
-    if (socketpair(PF_UNIX, SOCK_DGRAM, 0, pair) < 0) {
-        cout << "socketpair failed" << endl;
-        return 1;
-    }*/
+    bool server = (argc <= 1);
 
 	int pid = 0;
     if (argc <= 1) {
@@ -233,8 +228,8 @@ int main(int argc, char**argv) {
         if (pid != 0) {
             vislink::Server* server = new vislink::Server();
             api = server;
-            api->createSharedTexture("hit", vislink::TextureInfo());
-            vislink::Texture tex = api->getSharedTexture("hit");
+            api->createSharedTexture("test.png", vislink::TextureInfo());
+            vislink::Texture tex = api->getSharedTexture("test.png");
             server->sendfd(tex.externalHandle);
             while(true) {
                 server->service();
@@ -244,9 +239,6 @@ int main(int argc, char**argv) {
     }
 
     int externalHandle;
-
-    bool server = true; 
-
 	
     if (argc > 1) {
         windowXPos = WIDTH;
@@ -254,68 +246,23 @@ int main(int argc, char**argv) {
 	if (pid == 0 || argc > 1) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
-        //close(pair[1]);
-		//int fd = recvfd(pair[0]);
-		//std::cout <<"recvfd " << fd << std::endl;
-		//int externalHandle = client->recvfd();
-		//std::cout << "Clientfd: " << externalHandle << std::endl;
-		int fd = client->recvfd();
-		std::cout <<"recvfd " << fd << std::endl;
-		externalHandle = fd;
-		//exit(0);
-		server = false;
 	}
-	else {
-		vislink::Server* server = new vislink::Server();
-        api = server;
-        api->createSharedTexture("hit", vislink::TextureInfo());
-        vislink::Texture tex = api->getSharedTexture("hit");
-        server->sendfd(tex.externalHandle);
-        server->service();
-		/*tex = api->getSharedTexture("hit");
 
-		server->sendfd(tex.externalHandle);
 
-		externalHandle = tex.externalHandle;*/
-	}
 
     initGLFW();
 	initGL();
 
     api = new vislink::VisLinkOpenGL(api);
-    vislink::Texture tex = api->getSharedTexture("hit");
-    std::cout << "Texture id" << tex.id << " " << tex.externalHandle << std::endl;
+    vislink::Texture tex = api->getSharedTexture("test.png");
     externalTexture = tex.id;
 
-    /*tex.width = 256;
-    tex.height = 256;
-    tex.components = 4;
-    tex.externalHandle = externalHandle;
-    //vislink::OpenGLTexture* extTexture = tex.createOpenGLTexture();
-    externalTexture = vislink::createOpenGLTexture(tex);*/
-/*
-	//api->getSharedTexture("hi");
-	//int externalHandle = api->getSharedTexture("hi")->externalHandle;
-    std::cout << externalHandle << std::endl;
-    GLuint mem = 0;
-#define SIZE 256
-
-    glCreateMemoryObjectsEXT(1, &mem);
-#ifdef WIN32
-#else
-    glImportMemoryFdEXT(mem, SIZE*SIZE*4, GL_HANDLE_TYPE_OPAQUE_FD_EXT, externalHandle);
-#endif
-    glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
-
-    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, SIZE, SIZE, mem, 0 );
-*/
     if (server) {
     	GLuint format = GL_RGBA;
 	    GLuint internalFormat = GL_RGBA;
 	    GLuint type = GL_UNSIGNED_BYTE;
 
 	    Image* image = mainImage.getComponent<Image>();
-	    /*glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image->getWidth(), image->getHeight(), 0, format, type, image->getData());*/
 
 		glBindTexture(GL_TEXTURE_2D, externalTexture);
 	    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->getWidth(), image->getHeight(), internalFormat, type, image->getData());
@@ -344,12 +291,10 @@ int main(int argc, char**argv) {
         loc = glGetUniformLocation(shaderProgram, "ModelMatrix");
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(model));
 
-        // Draw cube
+        // Draw quad
         glBindVertexArray(vao);
         glActiveTexture(GL_TEXTURE0+0);
-        //glBindTexture(GL_TEXTURE_2D, texture);
         glBindTexture(GL_TEXTURE_2D, externalTexture);
-        //glBindTexture(GL_TEXTURE_2D, color[currentImage]);
         loc = glGetUniformLocation(shaderProgram, "tex");
         glUniform1i(loc, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -364,9 +309,7 @@ int main(int argc, char**argv) {
 	glfwDestroyWindow(window);
     glfwTerminate();
 
-    std::cout << "delete api" << std::endl;
     delete api;
-    std::cout << " api deleted" << std::endl;
 
 	return 0;
 }

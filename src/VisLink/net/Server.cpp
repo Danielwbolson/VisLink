@@ -293,9 +293,10 @@ void Server::service() {
         if (FD_ISSET(sd , &readfds)) {
             //Check if it was for closing , and also read the  
             //incoming message  
-            int valread;
-            char buffer[1025]; 
-            if ((valread = read( sd , buffer, 1025)) == 0) {   
+            int dataLength;
+            //char buffer[1025]; 
+            NetMessageType messageType = receiveMessage(sd, dataLength);
+            if (messageType == MSG_none) { //(valread = read( sd , buffer, 1025)) == 0) {   
                 //Somebody disconnected , get his details and print  
                 struct sockaddr_un client_addr;
                 socklen_t client_len;
@@ -307,9 +308,18 @@ void Server::service() {
                 //clientSocketFDs.erase(clientSocketFDs.begin()+f);
                 clientSocketFDs[f] = 0;
             }
+            else if (messageType == MSG_getSharedTexture) {
+                unsigned char* buf = new unsigned char[dataLength+1];
+                receiveData(sd, buf, dataLength);
+                buf[dataLength] = '\0';
+                std::string val(reinterpret_cast<char*>(buf));
+                Texture tex = getSharedTexture(val);
+                NetInterface::sendfd(sd, tex.externalHandle);
+                sendData(sd, (unsigned char*)&tex, sizeof(tex));
+            }
             else {
-                buffer[valread] = '\0';
-                std::cout << "Value: " << buffer << std::endl;
+                //buffer[valread] = '\0';
+                //std::cout << "Value: " << buffer << std::endl;
             }
         }
 

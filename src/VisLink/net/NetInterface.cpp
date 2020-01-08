@@ -11,7 +11,6 @@ namespace vislink {
 
 int NetInterface::sendfd(SOCKET socket, int fd) {
 
-  std::cout << "sendfd " << std::endl;
     char dummy = '$';
     struct msghdr msg;
     struct iovec iov;
@@ -29,16 +28,12 @@ int NetInterface::sendfd(SOCKET socket, int fd) {
     msg.msg_control = cmsgbuf;
     msg.msg_controllen = sizeof(cmsgbuf);//CMSG_LEN(sizeof(int));
 
-    std::cout << CMSG_LEN(sizeof(int)) << " " << CMSG_SPACE(sizeof(int)) << " " << sizeof(cmsgbuf) << std::endl;
-
     struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type = SCM_RIGHTS;
     cmsg->cmsg_len = CMSG_LEN(sizeof(int));
 
     *(int*) CMSG_DATA(cmsg) = fd;
-
-    std::cout << cmsg << std::endl;
 
     int ret = sendmsg(socket, &msg, 0);
 
@@ -50,7 +45,6 @@ int NetInterface::sendfd(SOCKET socket, int fd) {
 }
 
 int NetInterface::recvfd(SOCKET socket) {
-  std::cout << "recvfd " << std::endl;
     int len;
     int fd;
     char buf[1];
@@ -58,7 +52,6 @@ int NetInterface::recvfd(SOCKET socket) {
     struct msghdr msg;
     struct cmsghdr *cmsg;
     char cms[CMSG_SPACE(sizeof(int))];
-    std::cout << CMSG_SPACE(sizeof(int)) << std::endl;
 
     iov.iov_base = buf;
     iov.iov_len = sizeof(buf);
@@ -71,16 +64,7 @@ int NetInterface::recvfd(SOCKET socket) {
     msg.msg_control = (caddr_t) cms;
     msg.msg_controllen = sizeof cms;
 
-#ifdef  HAVE_MSGHDR_MSG_CONTROL
-    std::cout << "has mesghdr control" << std::endl;
-#else
-    std::cout << "not has mesghdr control" << std::endl;
-#endif
-
-    std::cout << sizeof cms  << " " << msg.msg_control << " " << msg.msg_controllen << std::endl;
-
     len = recvmsg(socket, &msg, 0);
-    std::cout << sizeof cms  << " " << msg.msg_control << " " << msg.msg_controllen << std::endl;
 
     if (len < 0) {
         LOGE("recvmsg failed with %s", strerror(errno));
@@ -129,6 +113,34 @@ int NetInterface::receiveData(SOCKET s, unsigned char *buf, int len) {
     bytesleft -= n;
   }
   return n==-1?-1:total; // return -1 on failure, total on success
+}
+
+void NetInterface::sendMessage(SOCKET s, NetMessageType type, const unsigned char *data, int len) {
+	int dataSize =  len + 1 + sizeof(int);
+	unsigned char *buf = new unsigned char[dataSize+1];
+	//1. add 1-byte message header
+	buf[0] = type;
+	// 2. add the size of the message data so receive will know how
+	// many bytes to expect.
+	memcpy(&buf[1], &len, sizeof(int));
+	// 3. send the chars that make up the data.
+	memcpy(&buf[1 + sizeof(int)], data, len);
+	//4. send package
+	sendData(s,buf,dataSize);
+	//5. delete buffer
+	delete[] buf;
+}
+
+NetMessageType NetInterface::receiveMessage(SOCKET s, int& len) {
+	unsigned char type;
+	len = read(s, &type, 1);
+	if (len == 0) {
+		return MSG_none;
+	}
+
+	read(s, &len, sizeof(int));
+
+	return static_cast<NetMessageType>(type);
 }
 
 }

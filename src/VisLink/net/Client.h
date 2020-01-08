@@ -15,8 +15,13 @@ public:
 	~Client();
 
 	virtual void createSharedTexture(const std::string& name, const TextureInfo& info) {}
+	
 	virtual Texture getSharedTexture(const std::string& name) { 
-		static Texture tex;
+	    sendMessage(socketFD, MSG_getSharedTexture, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
+	    Texture tex;
+	    int fd = NetInterface::recvfd(socketFD);
+	    receiveData(socketFD, (unsigned char*)&tex, sizeof(tex));
+	    tex.externalHandle = fd;
 		return tex;
 	}
 

@@ -186,8 +186,9 @@ Client::Client(const std::string &serverIP, int serverPort)
     receiveData(socketFD, buf, 3);
     std::cout << buf << std::endl;*/
 
-    unsigned char buf2[] = "hi back\0";
-    sendData(socketFD, buf2, sizeof(buf2));
+    //unsigned char buf2[] = "hi back\0";
+    //sendData(socketFD, buf2, sizeof(buf2));
+
 #endif
 
 }
