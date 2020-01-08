@@ -4,10 +4,12 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
+
+#ifdef WIN32
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <sys/types.h>        /* See NOTES */
 #include <sys/socket.h>
 
@@ -16,6 +18,7 @@
 #include <fcntl.h>
 
 #include <stdio.h>
+#endif
 
 namespace vislink {
 
@@ -61,7 +64,12 @@ public:
 OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 	textureInitExtensions();
 
-	int newHandle = dup(tex.externalHandle);
+	int newHandle = tex.externalHandle;
+
+#ifdef WIN32
+#else
+	newHandle = dup(newHandle);
+#endif
 
     std::cout << tex.externalHandle << std::endl;
     GLuint mem = 0;

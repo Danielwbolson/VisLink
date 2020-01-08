@@ -25,6 +25,7 @@ set(DEP_INCLUDES ${DEP_INCLUDES}
 
 include(${external_dir}/OpenGL/OpenGL.cmake)
 useOpenGL()
+useGLEW()
 
 # --------------------- Executable -----------------------
 

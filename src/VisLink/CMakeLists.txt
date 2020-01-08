@@ -58,6 +58,7 @@ set(DEP_LIBS ${DEP_LIBS} glfw)
 
 include(${external_dir}/OpenGL/OpenGL.cmake)
 useOpenGL()
+useGLEW()
 
 # --------------------- Executable -----------------------
 
