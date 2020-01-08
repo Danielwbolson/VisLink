@@ -28,6 +28,17 @@
   #include <sys/wait.h>
   #include <signal.h>
 	#include <sys/un.h>
+
+	#include <stdio.h>  
+	#include <string.h>   //strlen  
+	#include <stdlib.h>  
+	#include <errno.h>  
+	#include <unistd.h>   //close  
+	#include <arpa/inet.h>    //close  
+	#include <sys/types.h>  
+	#include <sys/socket.h>  
+	#include <netinet/in.h>  
+	#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 #endif
 
 #include "VisLink/VisLinkAPI.h"
@@ -38,8 +49,10 @@ class NetInterface : public VisLinkAPI {
 public:
 	virtual ~NetInterface() {}
 	
-	int recvfd(SOCKET socket);
+	int sendData(SOCKET s, const unsigned char *buf, int len);
+	int receiveData(SOCKET s, unsigned char *buf, int len);
 	int sendfd(SOCKET socket, int fd);
+	int recvfd(SOCKET socket);
 
 };
 

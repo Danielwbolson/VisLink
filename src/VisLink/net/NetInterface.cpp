@@ -4,7 +4,7 @@
 
 namespace vislink {
 
-	
+
 #define LOGD(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
 #define LOGE(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
 #define LOGW(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
@@ -95,6 +95,40 @@ int NetInterface::recvfd(SOCKET socket) {
     cmsg = CMSG_FIRSTHDR(&msg);
     memmove(&fd, CMSG_DATA(cmsg), sizeof(int));
     return fd;
+}
+
+int NetInterface::sendData(SOCKET s, const unsigned char *buf, int len) {
+  int total = 0;        // how many bytes we've sent
+  int bytesleft = len;  // how many we have left to send
+  int n = 0;
+  while (total < len) {
+#ifdef WIN32
+	  n = send(s, (char *)(buf + total), bytesleft, 0);
+#else
+	  n = send(s, buf + total, bytesleft, 0);
+#endif
+    if (n == -1) { break; }
+    total += n;
+    bytesleft -= n;
+  }
+  return n==-1?-1:total; // return -1 on failure, total on success
+}
+
+int NetInterface::receiveData(SOCKET s, unsigned char *buf, int len) {
+  int total = 0;        // how many bytes we've received
+  int bytesleft = len; // how many we have left to receive
+  int n = 0;
+  while (total < len) {
+#ifdef WIN32
+	  n = recv(s, (char *)(buf + total), bytesleft, 0);
+#else
+	  n = recv(s, (char *)(buf + total), bytesleft, 0);
+#endif
+    if (n == -1) { break; }
+    total += n;
+    bytesleft -= n;
+  }
+  return n==-1?-1:total; // return -1 on failure, total on success
 }
 
 }

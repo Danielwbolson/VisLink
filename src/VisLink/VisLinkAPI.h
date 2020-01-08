@@ -8,6 +8,7 @@ namespace vislink {
 
 class VisLinkAPI {
 public:
+	virtual ~VisLinkAPI() {}
 	virtual void createSharedTexture(const std::string& name, const TextureInfo& info) = 0;
 	virtual Texture getSharedTexture(const std::string& name) = 0;
 };

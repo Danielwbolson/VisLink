@@ -120,6 +120,7 @@ Server::Server(int listenPort, int numExpectedClients) {
   		std::cout << "cannot create a socket. socket(AF_INET, SOCK_STREAM, 0) failed" << std::endl;
         exit(1);
     }
+    serverSocketFD = serv_fd;
 
 
     if (setsockopt(serv_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
@@ -170,9 +171,13 @@ Server::Server(int listenPort, int numExpectedClients) {
         std::cout << s.str() << std::endl;
         
         clientSocketFDs.push_back(client_fd);
+
+        /*unsigned char buf[] = "hi\0";
+        sendData(client_fd, buf, 3);*/
     }
 
 	std::cout << "Established all expected connections." << std::endl;
+
 
 #endif
 }
@@ -200,6 +205,145 @@ Server::~Server() {
 	#ifdef WIN32
 	  WSACleanup();
 	#endif
+}
+
+void Server::service() {
+#ifdef WIN32
+#else
+    //https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
+    //clear the socket set  
+    FD_ZERO(&readfds);   
+ 
+    //add master socket to set  
+    FD_SET(serverSocketFD, &readfds);   
+    int max_sd = serverSocketFD;   
+         
+    //add child sockets to set  
+    for (int f = 0; f < clientSocketFDs.size(); f++) {
+        //socket descriptor  
+        int sd = clientSocketFDs[f]; 
+
+        //if valid socket descriptor then add to read list  
+        if (sd != 0) {
+            FD_SET(sd , &readfds); 
+        }
+
+        //highest file descriptor number, need it for the select function   
+        if(sd > max_sd) {
+            max_sd = sd;
+        }
+    }
+ 
+    //wait for an activity on one of the sockets , timeout is NULL ,  
+    //so wait indefinitely  
+    int activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);   
+   
+    if ((activity < 0) && (errno!=EINTR)) {   
+        printf("select error");   
+    }   
+         
+    //If something happened on the master socket ,  
+    //then its an incoming connection  
+    if (FD_ISSET(serverSocketFD, &readfds)) {   
+        struct sockaddr_un client_addr;
+        socklen_t client_len;
+        int client_fd = accept(serverSocketFD, (struct sockaddr *) &client_addr, &client_len);
+        if (client_fd == -1) {
+            std::cout << "accept() failed. Check for a problem with networking." << std::endl;
+            exit(1);
+        }
+        
+        std::cout << "New Connection." << std::endl; 
+       
+        //send new connection greeting message  
+        //unsigned char buf[] = "hy\0";
+        //sendData(client_fd, buf, 3);
+             
+        //puts("Welcome message sent successfully");   
+             
+        //add new socket to array of sockets  
+        /*for (i = 0; i < max_clients; i++) {   
+            //if position is empty  
+            if( client_socket[i] == 0 )   
+            {   
+                client_socket[i] = new_socket;   
+                printf("Adding to list of sockets as %d\n" , i);   
+                     
+                break;   
+            }   
+        } */
+        bool foundReplacement = false;
+        for (int f = 0; f < clientSocketFDs.size(); f++) {
+            if (clientSocketFDs[f] == 0) {
+                clientSocketFDs[f] = client_fd;
+                foundReplacement = true;
+                break;
+            }
+        }
+        if (!foundReplacement) {
+            clientSocketFDs.push_back(client_fd);  
+        }
+    }
+
+    //else its some IO operation on some other socket 
+    for (int f = 0; f < clientSocketFDs.size(); f++) {
+        //socket descriptor  
+        int sd = clientSocketFDs[f]; 
+
+        if (FD_ISSET(sd , &readfds)) {
+            //Check if it was for closing , and also read the  
+            //incoming message  
+            int valread;
+            char buffer[1025]; 
+            if ((valread = read( sd , buffer, 1025)) == 0) {   
+                //Somebody disconnected , get his details and print  
+                struct sockaddr_un client_addr;
+                socklen_t client_len;
+                getpeername(sd , (struct sockaddr*)&client_addr , (socklen_t*)&client_len);   
+                std::cout <<"Host disconnected " << std::endl;   
+                     
+                //Close the socket and mark as 0 in list for reuse  
+                //close(sd);
+                //clientSocketFDs.erase(clientSocketFDs.begin()+f);
+                clientSocketFDs[f] = 0;
+            }
+            else {
+                buffer[valread] = '\0';
+                std::cout << "Value: " << buffer << std::endl;
+            }
+        }
+
+    }
+
+
+    /*for (i = 0; i < max_clients; i++) {   
+        sd = client_socket[i];   
+             
+        if (FD_ISSET( sd , &readfds)) {   
+            //Check if it was for closing , and also read the  
+            //incoming message  
+            if ((valread = read( sd , buffer, 1024)) == 0) {   
+                //Somebody disconnected , get his details and print  
+                getpeername(sd , (struct sockaddr*)&address , \ 
+                    (socklen_t*)&addrlen);   
+                printf("Host disconnected , ip %s , port %d \n" ,  
+                      inet_ntoa(address.sin_addr) , ntohs(address.sin_port));   
+                     
+                //Close the socket and mark as 0 in list for reuse  
+                close( sd );   
+                client_socket[i] = 0;   
+            }   
+                 
+            //Echo back the message that came in  
+            else {   
+                //set the string terminating NULL byte on the end  
+                //of the data read  
+                buffer[valread] = '\0';   
+                send(sd , buffer , strlen(buffer) , 0 );   
+            }   
+        }   
+    }*/
+#endif
 }
 
 }

@@ -212,7 +212,6 @@ using namespace std;
 
 int main(int argc, char**argv) {
 
-
 	vislink::VisLinkAPI* api = NULL;
 
 
@@ -222,13 +221,27 @@ int main(int argc, char**argv) {
     if (socketpair(PF_UNIX, SOCK_DGRAM, 0, pair) < 0) {
         cout << "socketpair failed" << endl;
         return 1;
-    }
-
-	int pid;
- 	if ((pid = fork()) < 0) {
-        cout << "fork failed" << endl;
-        return 1;
     }*/
+
+	int pid = 0;
+    if (argc <= 1) {
+        if ((pid = fork()) < 0) {
+            cout << "fork failed" << endl;
+            return 1;
+        }
+
+        if (pid != 0) {
+            vislink::Server* server = new vislink::Server();
+            api = server;
+            api->createSharedTexture("hit", vislink::TextureInfo());
+            vislink::Texture tex = api->getSharedTexture("hit");
+            server->sendfd(tex.externalHandle);
+            while(true) {
+                server->service();
+            }
+            return 0;
+        }
+    }
 
     int externalHandle;
 
@@ -238,11 +251,7 @@ int main(int argc, char**argv) {
     if (argc > 1) {
         windowXPos = WIDTH;
     }
-
-    initGLFW();
-
-	//if (pid == 0) {//argc > 1) {
-	if (argc > 1) {
+	if (pid == 0 || argc > 1) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
         //close(pair[1]);
@@ -262,6 +271,7 @@ int main(int argc, char**argv) {
         api->createSharedTexture("hit", vislink::TextureInfo());
         vislink::Texture tex = api->getSharedTexture("hit");
         server->sendfd(tex.externalHandle);
+        server->service();
 		/*tex = api->getSharedTexture("hit");
 
 		server->sendfd(tex.externalHandle);
@@ -269,9 +279,8 @@ int main(int argc, char**argv) {
 		externalHandle = tex.externalHandle;*/
 	}
 
-
+    initGLFW();
 	initGL();
-
 
     api = new vislink::VisLinkOpenGL(api);
     vislink::Texture tex = api->getSharedTexture("hit");
@@ -355,6 +364,9 @@ int main(int argc, char**argv) {
 	glfwDestroyWindow(window);
     glfwTerminate();
 
+    std::cout << "delete api" << std::endl;
+    delete api;
+    std::cout << " api deleted" << std::endl;
 
 	return 0;
 }

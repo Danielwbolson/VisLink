@@ -181,6 +181,13 @@ Client::Client(const std::string &serverIP, int serverPort)
     }
 
     socketFD = sockfd;
+
+    /*unsigned char buf[3];
+    receiveData(socketFD, buf, 3);
+    std::cout << buf << std::endl;*/
+
+    unsigned char buf2[] = "hi back\0";
+    sendData(socketFD, buf2, sizeof(buf2));
 #endif
 
 }
@@ -198,6 +205,7 @@ Client::~Client()
   closesocket(socketFD);
   WSACleanup();
 #else
+  std::cout << "close socket" << std::endl;
   close(socketFD);
 #endif
 }

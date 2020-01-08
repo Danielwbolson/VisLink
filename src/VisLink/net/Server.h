@@ -11,7 +11,7 @@ namespace vislink {
 
 class Server : public NetInterface {
 public:
-	Server(int listenPort = 3457, int numExpectedClients = 1);
+	Server(int listenPort = 3457, int numExpectedClients = 2);
 	~Server();
 
 	void createSharedTexture(const std::string& name, const TextureInfo& info) { 
@@ -21,10 +21,13 @@ public:
 
 	int sendfd(int fd);
 	int sendfd(SOCKET socket, int fd);
+	void service();
 
 private:
+	SOCKET serverSocketFD;
 	std::vector<SOCKET> clientSocketFDs;
 	VisLinkAPIImpl impl;
+	fd_set readfds;
 };
 
 }
