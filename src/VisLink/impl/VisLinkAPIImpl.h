@@ -25,7 +25,13 @@ private:
 class VisLinkOpenGL : public VisLinkAPI {
 public:
 	VisLinkOpenGL(VisLinkAPI* api) : api(api) {}
-	~VisLinkOpenGL() { delete api; }
+	~VisLinkOpenGL() {
+		for (std::map<std::string, OpenGLTexture*>::iterator it = textures.begin(); it != textures.end(); it++) {
+			delete it->second;
+		}
+		
+		delete api; 
+	}
 
 	void createSharedTexture(const std::string& name, const TextureInfo& info) {
 		api->createSharedTexture(name, info);

@@ -19,8 +19,6 @@ public:
 	}
 	Texture getSharedTexture(const std::string& name) { return impl.getSharedTexture(name); }
 
-	int sendfd(int fd);
-	//int sendfd(SOCKET socket, int fd);
 	void service();
 
 private:

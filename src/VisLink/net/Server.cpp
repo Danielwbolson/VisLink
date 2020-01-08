@@ -148,48 +148,11 @@ Server::Server(int listenPort, int numExpectedClients) {
     socklen_t client_len;
     struct sockaddr_un client_addr;
     int client_fd;
-    
-    int numConnected = 0;
-    while (numConnected < numExpectedClients) {
-        client_len = sizeof(client_addr);
-        client_fd = accept(serv_fd, (struct sockaddr *) &client_addr, &client_len);
-        if (client_fd == -1) {
-  			std::cout << "accept() failed. Check for a problem with networking." << std::endl;
-            exit(1);
-        }
-        
-        // Disable Nagle's algorithm on the client's socket
-        //setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
-        
-        numConnected++;
-        
-        //char clientname[INET_ADDRSTRLEN];
-        //inet_ntop(AF_INET, &client_addr.sin_addr, clientname, sizeof(clientname));
-        
-        std::stringstream s;
-        s << "Received connection " << numConnected << " of " << numExpectedClients << " from " << "clientname";
-        std::cout << s.str() << std::endl;
-        
-        clientSocketFDs.push_back(client_fd);
-
-        /*unsigned char buf[] = "hi\0";
-        sendData(client_fd, buf, 3);*/
-    }
 
 	std::cout << "Established all expected connections." << std::endl;
 
 
 #endif
-}
-
-
-
-int Server::sendfd(int fd) {
-    for (int f = 0; f < clientSocketFDs.size(); f++) {
-        NetInterface::sendfd(clientSocketFDs[f], fd);
-    }
-
-    return 0;
 }
 
 Server::~Server() {
@@ -210,7 +173,7 @@ Server::~Server() {
 void Server::service() {
 #ifdef WIN32
 #else
-    //https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
+    //Adapted from https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
     //clear the socket set  
     FD_ZERO(&readfds);   
  
@@ -255,23 +218,6 @@ void Server::service() {
         
         std::cout << "New Connection." << std::endl; 
        
-        //send new connection greeting message  
-        //unsigned char buf[] = "hy\0";
-        //sendData(client_fd, buf, 3);
-             
-        //puts("Welcome message sent successfully");   
-             
-        //add new socket to array of sockets  
-        /*for (i = 0; i < max_clients; i++) {   
-            //if position is empty  
-            if( client_socket[i] == 0 )   
-            {   
-                client_socket[i] = new_socket;   
-                printf("Adding to list of sockets as %d\n" , i);   
-                     
-                break;   
-            }   
-        } */
         bool foundReplacement = false;
         for (int f = 0; f < clientSocketFDs.size(); f++) {
             if (clientSocketFDs[f] == 0) {
@@ -302,10 +248,6 @@ void Server::service() {
                 socklen_t client_len;
                 getpeername(sd , (struct sockaddr*)&client_addr , (socklen_t*)&client_len);   
                 std::cout <<"Host disconnected " << std::endl;   
-                     
-                //Close the socket and mark as 0 in list for reuse  
-                //close(sd);
-                //clientSocketFDs.erase(clientSocketFDs.begin()+f);
                 clientSocketFDs[f] = 0;
             }
             else if (messageType == MSG_getSharedTexture) {
@@ -317,42 +259,9 @@ void Server::service() {
                 NetInterface::sendfd(sd, tex.externalHandle);
                 sendData(sd, (unsigned char*)&tex, sizeof(tex));
             }
-            else {
-                //buffer[valread] = '\0';
-                //std::cout << "Value: " << buffer << std::endl;
-            }
         }
 
     }
-
-
-    /*for (i = 0; i < max_clients; i++) {   
-        sd = client_socket[i];   
-             
-        if (FD_ISSET( sd , &readfds)) {   
-            //Check if it was for closing , and also read the  
-            //incoming message  
-            if ((valread = read( sd , buffer, 1024)) == 0) {   
-                //Somebody disconnected , get his details and print  
-                getpeername(sd , (struct sockaddr*)&address , \ 
-                    (socklen_t*)&addrlen);   
-                printf("Host disconnected , ip %s , port %d \n" ,  
-                      inet_ntoa(address.sin_addr) , ntohs(address.sin_port));   
-                     
-                //Close the socket and mark as 0 in list for reuse  
-                close( sd );   
-                client_socket[i] = 0;   
-            }   
-                 
-            //Echo back the message that came in  
-            else {   
-                //set the string terminating NULL byte on the end  
-                //of the data read  
-                buffer[valread] = '\0';   
-                send(sd , buffer , strlen(buffer) , 0 );   
-            }   
-        }   
-    }*/
 #endif
 }
 

@@ -19,14 +19,6 @@
 #define HEIGHT 512
 
 #include "sandbox/image/Image.h"
-#include <sys/types.h>        /* See NOTES */
-#include <sys/socket.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <stdio.h>
 
 using namespace sandbox;
 
@@ -34,15 +26,6 @@ GLFWwindow* window;
 GLuint vbo, vao, vshader, fshader, shaderProgram, texture, externalTexture;
 EntityNode mainImage;
 int windowXPos = 0;
-
-//vislink::OpenGLTexture* externalTexture = NULL;
-
-/*#define glCreateMemoryObjectsEXT pfnCreateMemoryObjectsEXT
-PFNGLCREATEMEMORYOBJECTSEXTPROC pfnCreateMemoryObjectsEXT;
-#define glImportMemoryFdEXT pfnImportMemoryFdEXT
-PFNGLIMPORTMEMORYFDEXTPROC pfnImportMemoryFdEXT;
-#define glTextureStorageMem2DEXT pfnTextureStorageMem2DEXT
-PFNGLTEXTURESTORAGEMEM2DEXTPROC pfnTextureStorageMem2DEXT;*/
 
 void initGLFW() { 
 	glfwInit();
@@ -54,20 +37,10 @@ void initGLFW() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
 
     window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL", nullptr, nullptr);
-    //glfwSetWindowUserPointer(window, this);
     glfwSetWindowPos (window, windowXPos, 0);
-    //glGetProcAddress("glGetVkProcAddrNV");
-    //glGetVkProcAddrNV("glDrawVkImageNV");
-    //glDrawVkImageNV((GLuint64)imageState->image, 0, 0,0, 100,100,0,0,0,100,100);
 
     glfwMakeContextCurrent(window);
     initializeGLExtentions();
-    /*pfnCreateMemoryObjectsEXT = (PFNGLCREATEMEMORYOBJECTSEXTPROC)
-    glfwGetProcAddress("glCreateMemoryObjectsEXT");
-    pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
-    glfwGetProcAddress("glImportMemoryFdEXT");
-    pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
-    glfwGetProcAddress("glTextureStorageMem2DEXT");*/
     
 }
 
@@ -212,11 +185,12 @@ using namespace std;
 
 int main(int argc, char**argv) {
 
-	vislink::VisLinkAPI* api = NULL;
-
     cout << "started..." << endl;
 
+	vislink::VisLinkAPI* api = NULL;
+
     bool server = (argc <= 1);
+
 
 	int pid = 0;
     if (argc <= 1) {
@@ -229,26 +203,21 @@ int main(int argc, char**argv) {
             vislink::Server* server = new vislink::Server();
             api = server;
             api->createSharedTexture("test.png", vislink::TextureInfo());
-            vislink::Texture tex = api->getSharedTexture("test.png");
-            server->sendfd(tex.externalHandle);
             while(true) {
                 server->service();
             }
             return 0;
         }
     }
-
-    int externalHandle;
 	
     if (argc > 1) {
         windowXPos = WIDTH;
     }
+
 	if (pid == 0 || argc > 1) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
 	}
-
-
 
     initGLFW();
 	initGL();
@@ -306,10 +275,11 @@ int main(int argc, char**argv) {
         glfwSwapBuffers(window);
 	}
 
+    delete api;
+
 	glfwDestroyWindow(window);
     glfwTerminate();
 
-    delete api;
 
 	return 0;
 }

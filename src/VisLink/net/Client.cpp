@@ -182,22 +182,10 @@ Client::Client(const std::string &serverIP, int serverPort)
 
     socketFD = sockfd;
 
-    /*unsigned char buf[3];
-    receiveData(socketFD, buf, 3);
-    std::cout << buf << std::endl;*/
-
-    //unsigned char buf2[] = "hi back\0";
-    //sendData(socketFD, buf2, sizeof(buf2));
-
 #endif
 
 }
 
-
-
-int Client::recvfd() {
-  return NetInterface::recvfd(socketFD);
-}
 
 Client::~Client()
 {
