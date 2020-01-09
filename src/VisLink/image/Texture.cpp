@@ -24,8 +24,15 @@ namespace vislink {
 
 #define glCreateMemoryObjectsEXT pfnCreateMemoryObjectsEXT
 PFNGLCREATEMEMORYOBJECTSEXTPROC pfnCreateMemoryObjectsEXT;
+
+#ifdef WIN32
+#define glImportMemoryWin32HandleEXT pfnImportMemoryWin32HandleEXT
+PFNGLIMPORTMEMORYWIN32HANDLEEXTPROC pfnImportMemoryWin32HandleEXT;
+#else
 #define glImportMemoryFdEXT pfnImportMemoryFdEXT
 PFNGLIMPORTMEMORYFDEXTPROC pfnImportMemoryFdEXT;
+#endif
+
 #define glTextureStorageMem2DEXT pfnTextureStorageMem2DEXT
 PFNGLTEXTURESTORAGEMEM2DEXTPROC pfnTextureStorageMem2DEXT;
 #define glDeleteMemoryObjectsEXT pfnDeleteMemoryObjectsEXT
@@ -40,9 +47,14 @@ void textureInitExtensions() {
 	if (!initialized) {
 	    pfnCreateMemoryObjectsEXT = (PFNGLCREATEMEMORYOBJECTSEXTPROC)
 	    glfwGetProcAddress("glCreateMemoryObjectsEXT");
-	    pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
-	    glfwGetProcAddress("glImportMemoryFdEXT");
-	    pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
+#ifdef WIN32
+		pfnImportMemoryWin32HandleEXT = (PFNGLIMPORTMEMORYWIN32HANDLEEXTPROC)
+			glfwGetProcAddress("glImportMemoryWin32HandleEXT");
+#else
+		pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
+			glfwGetProcAddress("glImportMemoryFdEXT");
+#endif
+		pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
 	    glfwGetProcAddress("glTextureStorageMem2DEXT");
 		pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
 		glfwGetProcAddress("glDeleteMemoryObjectsEXT");
@@ -69,10 +81,11 @@ public:
 OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 	textureInitExtensions();
 
-	int newHandle = tex.externalHandle;
 
 #ifdef WIN32
+	HANDLE newHandle = tex.externalHandle;
 #else
+	int newHandle = tex.externalHandle;
 	newHandle = dup(newHandle);
 #endif
 
@@ -81,6 +94,7 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex) {
     GLuint externalTexture = 0;
     glCreateMemoryObjectsEXT(1, &mem);
 #ifdef WIN32
+	glImportMemoryWin32HandleEXT(mem, tex.width * tex.height * tex.components, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, newHandle);
 #else
     glImportMemoryFdEXT(mem, tex.width*tex.height*tex.components, GL_HANDLE_TYPE_OPAQUE_FD_EXT, newHandle);
 #endif

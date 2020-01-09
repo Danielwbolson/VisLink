@@ -187,10 +187,11 @@ int main(int argc, char**argv) {
 
     cout << "started..." << endl;
 
+	initGLFW();
+
 	vislink::VisLinkAPI* api = new vislink::VisLinkAPIImpl();
     api->createSharedTexture("test.png", vislink::TextureInfo());
 
-    initGLFW();
 	initGL();
 
     api = new vislink::VisLinkOpenGL(api);

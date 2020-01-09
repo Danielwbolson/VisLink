@@ -1,6 +1,7 @@
 #ifndef VISLINK_IMAGE_TEXTURE_H_
 #define VISLINK_IMAGE_TEXTURE_H_
 
+#include <windows.h>
 #include <iostream>
 
 namespace vislink {
@@ -12,7 +13,11 @@ struct TextureInfo {
 };
 
 struct Texture : TextureInfo { 
+#ifdef WIN32
+	HANDLE externalHandle;
+#else
 	unsigned int externalHandle;
+#endif
 	unsigned int id;
 };
 

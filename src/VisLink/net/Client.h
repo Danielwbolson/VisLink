@@ -21,7 +21,10 @@ public:
 	    Texture tex;
 	    int fd = NetInterface::recvfd(socketFD);
 	    receiveData(socketFD, (unsigned char*)&tex, sizeof(tex));
-	    tex.externalHandle = fd;
+#ifdef WIN32
+#else
+		tex.externalHandle = fd;
+#endif
 		return tex;
 	}
 
