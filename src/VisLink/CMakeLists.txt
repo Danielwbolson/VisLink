@@ -17,6 +17,7 @@ set (SOURCEFILES
 
 set (HEADERFILES
   image/TextureManager.h
+  image/Texture.h
   net/Client.h
   net/Server.h
 )
@@ -36,6 +37,13 @@ set (HEADERFILES
 
 # --------------------- Dependencies -----------------------
 
+add_external(glm 
+	GIT_REPOSITORY https://github.com/g-truc/glm.git
+  HEADER_ONLY
+)
+add_definitions(-DGLM_FORCE_INLINE)
+include_directories(${external_dir}/glm/src)
+
 set(SandBoxArgs -DWITH_APPS=OFF -DCMAKE_DEBUG_POSTFIX=d)
 add_external(SandBox 
 	GIT_REPOSITORY https://github.com/dtorban/sandbox.git
@@ -49,12 +57,12 @@ set(DEP_LINK_DIRS ${DEP_LINK_DIRS}
   ${external_dir}/SandBox/src/cmake/framework/external/glfw3/build/install/lib
 )
 set(DEP_INCLUDES ${DEP_INCLUDES} 
-  ${external_dir}/SandBox/src/cmake/framework/external/glfw3/src
+  ${external_dir}/SandBox/src/cmake/framework/external/glfw3/build/install/include
 )
 if(MSVC)
-  set(DEP_LIBS ${DEP_LIBS} optimized glfw3.lib debug glfw3d.lib PARENT_SCOPE)
+  set(DEP_LIBS ${DEP_LIBS} optimized glfw3.lib debug glfw3d.lib)
 else()
-  set(DEP_LIBS ${DEP_LIBS} optimized libglfw3.a debug libglfw3d.a PARENT_SCOPE)
+  set(DEP_LIBS ${DEP_LIBS} optimized libglfw3.a debug libglfw3d.a)
 endif()
 
 set(DEP_INCLUDES ${DEP_INCLUDES} 
@@ -71,9 +79,9 @@ set(DEP_LIBS ${DEP_LIBS} ${Vulkan_LIBRARIES})
 
 include(${external_dir}/OpenGL/OpenGL.cmake)
 useOpenGL()
-useGLEW()
+useGLEW_NO_IMPL()
 
 # --------------------- Executable -----------------------
 
-addSharedLibrary()
+addStandardLibrary()
 

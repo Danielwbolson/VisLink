@@ -30,6 +30,10 @@ PFNGLIMPORTMEMORYFDEXTPROC pfnImportMemoryFdEXT;
 PFNGLTEXTURESTORAGEMEM2DEXTPROC pfnTextureStorageMem2DEXT;
 #define glDeleteMemoryObjectsEXT pfnDeleteMemoryObjectsEXT
 PFNGLDELETEMEMORYOBJECTSEXTPROC pfnDeleteMemoryObjectsEXT;
+#define glCreateTextures pfnCreateTextures
+PFNGLCREATETEXTURESPROC pfnCreateTextures;
+
+
 
 void textureInitExtensions() {
 	static bool initialized = false;
@@ -40,8 +44,10 @@ void textureInitExtensions() {
 	    glfwGetProcAddress("glImportMemoryFdEXT");
 	    pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
 	    glfwGetProcAddress("glTextureStorageMem2DEXT");
-	    pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
-	    glfwGetProcAddress("glDeleteMemoryObjectsEXT");
+		pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
+		glfwGetProcAddress("glDeleteMemoryObjectsEXT");
+		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
+		glfwGetProcAddress("glCreateTextures");
 	    initialized = true;
 	}
 }
@@ -59,7 +65,6 @@ public:
 	GLuint mem;
 	Texture texture;
 };
-
 
 OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 	textureInitExtensions();

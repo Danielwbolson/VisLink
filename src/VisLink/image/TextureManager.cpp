@@ -10,6 +10,8 @@
 #include "sandbox/graphics/vulkan/image/VulkanImportImage.h"
 #include "sandbox/image/Image.h"
 
+#ifdef WIN32
+#else
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +25,7 @@
 #include <fcntl.h>
 
 #include <stdio.h>
+#endif
 
 namespace vislink {
 

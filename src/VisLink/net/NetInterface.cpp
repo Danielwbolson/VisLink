@@ -10,7 +10,9 @@ namespace vislink {
 #define LOGW(...) do { printf(__VA_ARGS__); printf("\n"); } while(0)
 
 int NetInterface::sendfd(SOCKET socket, int fd) {
-
+#ifdef WIN32
+	return 0;
+#else
     char dummy = '$';
     struct msghdr msg;
     struct iovec iov;
@@ -42,9 +44,13 @@ int NetInterface::sendfd(SOCKET socket, int fd) {
     }
 
     return ret;
+#endif
 }
 
 int NetInterface::recvfd(SOCKET socket) {
+#ifdef WIN32
+	return 0;
+#else
     int len;
     int fd;
     char buf[1];
@@ -79,6 +85,7 @@ int NetInterface::recvfd(SOCKET socket) {
     cmsg = CMSG_FIRSTHDR(&msg);
     memmove(&fd, CMSG_DATA(cmsg), sizeof(int));
     return fd;
+#endif
 }
 
 int NetInterface::sendData(SOCKET s, const unsigned char *buf, int len) {
@@ -133,12 +140,21 @@ void NetInterface::sendMessage(SOCKET s, NetMessageType type, const unsigned cha
 
 NetMessageType NetInterface::receiveMessage(SOCKET s, int& len) {
 	unsigned char type;
+#ifdef WIN32
+	len = recv(s, (char*)&type, 1, 0);
+#else
 	len = read(s, &type, 1);
+#endif
+	
 	if (len == 0) {
 		return MSG_none;
 	}
 
+#ifdef WIN32
+	recv(s, (char*)&len, sizeof(int), 0);
+#else
 	read(s, &len, sizeof(int));
+#endif
 
 	return static_cast<NetMessageType>(type);
 }

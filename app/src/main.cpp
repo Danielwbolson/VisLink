@@ -194,7 +194,11 @@ int main(int argc, char**argv) {
 
 	int pid = 0;
     if (argc <= 1) {
+#ifdef WIN32
+		if (false) {
+#else
         if ((pid = fork()) < 0) {
+#endif
             cout << "fork failed" << endl;
             return 1;
         }

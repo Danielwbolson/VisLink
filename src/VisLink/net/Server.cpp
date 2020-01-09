@@ -35,7 +35,7 @@ Server::Server(int listenPort, int numExpectedClients) {
     struct addrinfo *result = NULL;
     std::stringstream port;
     port << listenPort;
-    iResult = getaddrinfo(NULL, port.str(), &hints, &result);
+    iResult = getaddrinfo(NULL, port.str().c_str(), &hints, &result);
     if ( iResult != 0 ) {
         std::stringstream s;
         s << "WSAStartup failed with error: " << iResult;
