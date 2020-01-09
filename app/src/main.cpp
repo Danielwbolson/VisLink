@@ -37,7 +37,7 @@ void initGLFW() {
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
 
     window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL", nullptr, nullptr);
-    glfwSetWindowPos (window, windowXPos, 0);
+    glfwSetWindowPos (window, windowXPos, 20);
 
     glfwMakeContextCurrent(window);
     initializeGLExtentions();
@@ -192,9 +192,16 @@ int main(int argc, char**argv) {
     bool server = (argc <= 1);
 
 
+	if (argc > 1) {
+		windowXPos = WIDTH;
+	}
+
+	initGLFW();
+
 	int pid = 0;
     if (argc <= 1) {
 #ifdef WIN32
+		pid = 1;
 		if (false) {
 #else
         if ((pid = fork()) < 0) {
@@ -214,23 +221,20 @@ int main(int argc, char**argv) {
         }
     }
 	
-    if (argc > 1) {
-        windowXPos = WIDTH;
-    }
 
 	if (pid == 0 || argc > 1) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
 	}
 
-    initGLFW();
+	//initGLFW();
 	initGL();
 
     api = new vislink::VisLinkOpenGL(api);
     vislink::Texture tex = api->getSharedTexture("test.png");
     externalTexture = tex.id;
 
-    if (server) {
+    if (!server) {
     	GLuint format = GL_RGBA;
 	    GLuint internalFormat = GL_RGBA;
 	    GLuint type = GL_UNSIGNED_BYTE;

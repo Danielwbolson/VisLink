@@ -19,10 +19,30 @@ public:
 	virtual Texture getSharedTexture(const std::string& name) { 
 	    sendMessage(socketFD, MSG_getSharedTexture, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
 	    Texture tex;
-	    int fd = NetInterface::recvfd(socketFD);
-	    receiveData(socketFD, (unsigned char*)&tex, sizeof(tex));
 #ifdef WIN32
+		//HANDLE currentProcess = GetCurrentProcess();
+		//sendData(socketFD, (unsigned char*)&currentProcess, sizeof(HANDLE));
+		int pid = GetCurrentProcessId();
+		receiveData(socketFD, (unsigned char*)& pid, sizeof(int));
+		std::cout << "Pid client: " << pid << std::endl;
+		HANDLE serverProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
+		
+		HANDLE externalHandleDup;
+		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
+		std::cout << tex.externalHandle << " eh" << std::endl;
+		DuplicateHandle(serverProcess,
+			tex.externalHandle,
+			GetCurrentProcess(),
+			&externalHandleDup,
+			0,
+			FALSE,
+			DUPLICATE_SAME_ACCESS);
+		tex.externalHandle = externalHandleDup;
+		std::cout << tex.externalHandle << " eh" << std::endl;
+		//tex.externalHandle = 0;
 #else
+		int fd = NetInterface::recvfd(socketFD);
+		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
 		tex.externalHandle = fd;
 #endif
 		return tex;

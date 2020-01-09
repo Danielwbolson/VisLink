@@ -72,6 +72,8 @@ Server::Server(int listenPort, int numExpectedClients) {
         WSACleanup();
         exit(1);
     }
+
+	serverSocketFD = serv_fd;
     
     std::cout << "listening for client connection(s) on port " << listenPort << "..." << std::endl;
     
@@ -171,8 +173,6 @@ Server::~Server() {
 }
 
 void Server::service() {
-#ifdef WIN32
-#else
     //Adapted from https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
     //clear the socket set  
     FD_ZERO(&readfds);   
@@ -199,7 +199,11 @@ void Server::service() {
  
     //wait for an activity on one of the sockets , timeout is NULL ,  
     //so wait indefinitely  
-    int activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);   
+#ifdef WIN32
+	int activity = select(0, &readfds, NULL, NULL, NULL);
+#else
+	int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+#endif
    
     if ((activity < 0) && (errno!=EINTR)) {   
         printf("select error");   
@@ -208,10 +212,18 @@ void Server::service() {
     //If something happened on the master socket ,  
     //then its an incoming connection  
     if (FD_ISSET(serverSocketFD, &readfds)) {   
+#ifdef WIN32
+		struct sockaddr_in client_addr;
+#else
         struct sockaddr_un client_addr;
-        socklen_t client_len;
+#endif
+        socklen_t client_len = sizeof(client_addr);
         int client_fd = accept(serverSocketFD, (struct sockaddr *) &client_addr, &client_len);
+#ifdef WIN32
+		if (client_fd == INVALID_SOCKET) {
+#else
         if (client_fd == -1) {
+#endif
             std::cout << "accept() failed. Check for a problem with networking." << std::endl;
             exit(1);
         }
@@ -244,7 +256,11 @@ void Server::service() {
             NetMessageType messageType = receiveMessage(sd, dataLength);
             if (messageType == MSG_none) { //(valread = read( sd , buffer, 1025)) == 0) {   
                 //Somebody disconnected , get his details and print  
-                struct sockaddr_un client_addr;
+#ifdef WIN32
+				struct sockaddr_in client_addr;
+#else
+				struct sockaddr_un client_addr;
+#endif
                 socklen_t client_len;
                 getpeername(sd , (struct sockaddr*)&client_addr , (socklen_t*)&client_len);   
                 std::cout <<"Host disconnected " << std::endl;   
@@ -256,13 +272,31 @@ void Server::service() {
                 buf[dataLength] = '\0';
                 std::string val(reinterpret_cast<char*>(buf));
                 Texture tex = getSharedTexture(val);
+#ifdef WIN32
+				int pid = GetCurrentProcessId();
+				sendData(sd, (unsigned char*)& pid, sizeof(int));
+				std::cout << "Pid server: " << pid << std::endl;
+				//OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
+				//HANDLE externalProcess;
+				//receiveData(sd, (unsigned char*)&externalProcess, sizeof(HANDLE));
+				/*HANDLE externalHandleDup;
+
+				DuplicateHandle(GetCurrentProcess(),
+					tex.externalHandle,
+					externalProcess,
+					&externalHandleDup,
+					0,
+					FALSE,
+					DUPLICATE_SAME_ACCESS);
+				tex.externalHandle = externalHandleDup;*/
+#else
                 NetInterface::sendfd(sd, tex.externalHandle);
+#endif
                 sendData(sd, (unsigned char*)&tex, sizeof(tex));
             }
         }
 
     }
-#endif
 }
 
 }
