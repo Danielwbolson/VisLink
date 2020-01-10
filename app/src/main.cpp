@@ -28,7 +28,6 @@ EntityNode mainImage;
 int windowXPos = 0;
 
 void initGLFW() { 
-	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -183,6 +182,7 @@ using namespace std;
 int main(int argc, char**argv) {
 
     cout << "started..." << endl;
+    glfwInit();
 
 	vislink::VisLinkAPI* api = NULL; 
 
@@ -193,7 +193,6 @@ int main(int argc, char**argv) {
 		windowXPos = WIDTH;
 	}
 
-	initGLFW();
 
 	int pid = 0;
     if (argc <= 1) {
@@ -223,6 +222,8 @@ int main(int argc, char**argv) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
 	}
+    
+    initGLFW();
 
 	//initGLFW();
 	initGL();
