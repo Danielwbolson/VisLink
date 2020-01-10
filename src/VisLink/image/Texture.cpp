@@ -40,27 +40,56 @@ PFNGLDELETEMEMORYOBJECTSEXTPROC pfnDeleteMemoryObjectsEXT;
 #define glCreateTextures pfnCreateTextures
 PFNGLCREATETEXTURESPROC pfnCreateTextures;
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
 
+static HMODULE libgl;
+
+static void open_libgl(void)
+{
+	libgl = LoadLibraryA("opengl32.dll");
+}
+
+static void close_libgl(void)
+{
+	FreeLibrary(libgl);
+}
+
+static void* get_proc(const char* proc)
+{
+	void* res;
+
+	res = wglGetProcAddress(proc);
+	if (!res)
+		res = GetProcAddress(libgl, proc);
+	return res;
+}
+
+#endif
 
 void textureInitExtensions() {
 	static bool initialized = false;
 	if (!initialized) {
+		open_libgl();
 	    pfnCreateMemoryObjectsEXT = (PFNGLCREATEMEMORYOBJECTSEXTPROC)
-	    glfwGetProcAddress("glCreateMemoryObjectsEXT");
+			get_proc("glCreateMemoryObjectsEXT");
 #ifdef WIN32
 		pfnImportMemoryWin32HandleEXT = (PFNGLIMPORTMEMORYWIN32HANDLEEXTPROC)
-			glfwGetProcAddress("glImportMemoryWin32HandleEXT");
+			get_proc("glImportMemoryWin32HandleEXT");
 #else
 		pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
 			glfwGetProcAddress("glImportMemoryFdEXT");
 #endif
 		pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
-	    glfwGetProcAddress("glTextureStorageMem2DEXT");
+			get_proc("glTextureStorageMem2DEXT");
 		pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
-		glfwGetProcAddress("glDeleteMemoryObjectsEXT");
+			get_proc("glDeleteMemoryObjectsEXT");
 		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
-		glfwGetProcAddress("glCreateTextures");
+			get_proc("glCreateTextures");
 	    initialized = true;
+		close_libgl();
+		std::cout << "wgl get proc" << std::endl;
 	}
 }
 
@@ -68,8 +97,8 @@ class OpenGLTextureImpl : public OpenGLTexture {
 public:
 	OpenGLTextureImpl(const Texture& texture) : texture(texture) {}
 	~OpenGLTextureImpl() {
-		glDeleteTextures(1, &id);
-		glDeleteMemoryObjectsEXT(1, &mem);
+		//glDeleteTextures(1, &id);
+		//glDeleteMemoryObjectsEXT(1, &mem);
 	}
 	virtual unsigned int getId() const { return id; }
 	virtual const Texture& getTexture() const { return texture; }
@@ -81,7 +110,7 @@ public:
 OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 	textureInitExtensions();
 
-
+	
 #ifdef WIN32
 	HANDLE newHandle = tex.externalHandle;
 #else
@@ -98,7 +127,8 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 #else
     glImportMemoryFdEXT(mem, tex.width*tex.height*tex.components, GL_HANDLE_TYPE_OPAQUE_FD_EXT, newHandle);
 #endif
-    glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
+	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
+	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 
     glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, tex.width, tex.height, mem, 0 );
     OpenGLTextureImpl* texture = new OpenGLTextureImpl(tex);

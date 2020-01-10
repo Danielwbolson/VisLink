@@ -23,7 +23,7 @@
 using namespace sandbox;
 
 GLFWwindow* window;
-GLuint vbo, vao, vshader, fshader, shaderProgram, texture, externalTexture;
+GLuint vbo, vao, vshader, fshader, shaderProgram, externalTexture;
 EntityNode mainImage;
 int windowXPos = 0;
 
@@ -150,7 +150,7 @@ void initGL() {
                     "   vec4 texColor = texture(tex, col.xy);"
                     "   colorOut = texColor; "
                     "}";
-            fshader = compileShader(fragmentShader, GL_FRAGMENT_SHADER);
+            fshader = compileShader(fragmentShader, GL_FRAGMENT_SHADER); 
 
             // Create shader program
             shaderProgram = glCreateProgram();
@@ -163,12 +163,9 @@ void initGL() {
             GLuint internalFormat = GL_RGBA;
             GLuint type = GL_UNSIGNED_BYTE;
 
-            glGenTextures(1, &texture);
             mainImage.addComponent(new Image("app/textures/test.png"));
             mainImage.update();
-            glBindTexture(GL_TEXTURE_2D, texture);
             Image* image = mainImage.getComponent<Image>();
-            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image->getWidth(), image->getHeight(), 0, format, type, image->getData());
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -187,7 +184,7 @@ int main(int argc, char**argv) {
 
     cout << "started..." << endl;
 
-	vislink::VisLinkAPI* api = NULL;
+	vislink::VisLinkAPI* api = NULL; 
 
     bool server = (argc <= 1);
 
@@ -235,7 +232,7 @@ int main(int argc, char**argv) {
     externalTexture = tex.id;
 
     if (!server) {
-    	GLuint format = GL_RGBA;
+    	GLuint format = GL_RGBA; 
 	    GLuint internalFormat = GL_RGBA;
 	    GLuint type = GL_UNSIGNED_BYTE;
 
@@ -244,12 +241,11 @@ int main(int argc, char**argv) {
 		glBindTexture(GL_TEXTURE_2D, externalTexture);
 	    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->getWidth(), image->getHeight(), internalFormat, type, image->getData());
 
-	    std::cout << "updating texture" << std::endl;
+	    std::cout << "updating texture " << externalTexture << std::endl;
     }
-    
 
 
-	while (!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(window)) { 
 		glfwPollEvents();
 		glfwMakeContextCurrent(window);
         glClearColor(1,1,1,1);

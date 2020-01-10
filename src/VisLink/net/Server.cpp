@@ -293,6 +293,10 @@ void Server::service() {
                 NetInterface::sendfd(sd, tex.externalHandle);
 #endif
                 sendData(sd, (unsigned char*)&tex, sizeof(tex));
+				//int texId = 0;
+				//receiveData(sd, (unsigned char*)& texId, sizeof(int));
+				//std::cout << "tex id: " << texId << std::endl;
+
             }
         }
 
