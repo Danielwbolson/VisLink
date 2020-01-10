@@ -1,7 +1,9 @@
 #ifndef VISLINK_IMAGE_TEXTURE_H_
 #define VISLINK_IMAGE_TEXTURE_H_
 
+#ifdef WIN32
 #include <windows.h>
+#endif
 #include <iostream>
 
 namespace vislink {

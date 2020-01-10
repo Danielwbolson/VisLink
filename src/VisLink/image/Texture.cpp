@@ -40,6 +40,7 @@ PFNGLDELETEMEMORYOBJECTSEXTPROC pfnDeleteMemoryObjectsEXT;
 #define glCreateTextures pfnCreateTextures
 PFNGLCREATETEXTURESPROC pfnCreateTextures;
 
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
@@ -66,21 +67,14 @@ static void* get_proc(const char* proc)
 	return res;
 }
 
-#endif
-
 void textureInitExtensions() {
 	static bool initialized = false;
 	if (!initialized) {
 		open_libgl();
 	    pfnCreateMemoryObjectsEXT = (PFNGLCREATEMEMORYOBJECTSEXTPROC)
 			get_proc("glCreateMemoryObjectsEXT");
-#ifdef WIN32
 		pfnImportMemoryWin32HandleEXT = (PFNGLIMPORTMEMORYWIN32HANDLEEXTPROC)
 			get_proc("glImportMemoryWin32HandleEXT");
-#else
-		pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
-			glfwGetProcAddress("glImportMemoryFdEXT");
-#endif
 		pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
 			get_proc("glTextureStorageMem2DEXT");
 		pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
@@ -92,6 +86,27 @@ void textureInitExtensions() {
 		std::cout << "wgl get proc" << std::endl;
 	}
 }
+
+#else
+
+void textureInitExtensions() {
+	static bool initialized = false;
+	if (!initialized) {
+	    pfnCreateMemoryObjectsEXT = (PFNGLCREATEMEMORYOBJECTSEXTPROC)
+			glfwGetProcAddress("glCreateMemoryObjectsEXT");
+		pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
+			glfwGetProcAddress("glImportMemoryFdEXT");
+		pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
+			glfwGetProcAddress("glTextureStorageMem2DEXT");
+		pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
+			glfwGetProcAddress("glDeleteMemoryObjectsEXT");
+		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
+			glfwGetProcAddress("glCreateTextures");
+	    initialized = true;
+	}
+}
+
+#endif
 
 class OpenGLTextureImpl : public OpenGLTexture {
 public:
