@@ -269,9 +269,11 @@ void Server::service() {
             else if (messageType == MSG_getSharedTexture) {
                 unsigned char* buf = new unsigned char[dataLength+1];
                 receiveData(sd, buf, dataLength);
+                int deviceIndex;
+                receiveData(sd, (unsigned char*)& deviceIndex, sizeof(int));
                 buf[dataLength] = '\0';
                 std::string val(reinterpret_cast<char*>(buf));
-                Texture tex = getSharedTexture(val);
+                Texture tex = getSharedTexture(val, deviceIndex);
 #ifdef WIN32
 				int pid = GetCurrentProcessId();
 				sendData(sd, (unsigned char*)& pid, sizeof(int));

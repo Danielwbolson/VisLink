@@ -31,14 +31,12 @@ namespace vislink {
 
 using namespace sandbox;
 
-class TextureManagerState {
-public:
-	TextureManagerState() {
+struct TextureManagerDeviceState {
+	TextureManagerDeviceState(Entity& instanceNode, VkPhysicalDevice physicalDevice) {
 		VulkanGraphicsQueue* graphicsQueue = new VulkanGraphicsQueue();
 
-		instanceNode.addComponent(new VulkanInstance());
 		deviceNode = new EntityNode(&instanceNode);
-			deviceNode->addComponent(new VulkanDevice(&instanceNode));
+			deviceNode->addComponent(new VulkanDevice(&instanceNode, physicalDevice));
 			deviceNode->addComponent(graphicsQueue);
 			graphicsObjects = new EntityNode(deviceNode);
 				images = new EntityNode(graphicsObjects);
@@ -49,13 +47,32 @@ public:
 				updateNode->addComponent(new RenderNode(graphicsObjects));
 	}
 
-	EntityNode instanceNode;
 	Entity* deviceNode;
 	Entity* graphicsObjects;
 	VulkanDeviceRenderer* renderer;
 	Entity* images;
-
 	std::map<std::string, Entity*> imageMap;
+};
+
+class TextureManagerState {
+public:
+	TextureManagerState() {
+		instanceNode.addComponent(new VulkanInstance());
+		instanceNode.update();
+
+		std::vector<VkPhysicalDevice> physicalDevices = instanceNode.getComponent<VulkanInstance>()->getPhysicalDevices();
+		
+		for (int f = 0; f < physicalDevices.size(); f++) {
+			devices.push_back(TextureManagerDeviceState(instanceNode, physicalDevices[f]));
+		}
+	}
+
+	TextureManagerDeviceState& getDeviceState(int index) {
+		return devices[index % devices.size()];
+	}
+
+	EntityNode instanceNode;
+	std::vector<TextureManagerDeviceState> devices;
 };
 
 
@@ -63,6 +80,12 @@ public:
 
 TextureManager::TextureManager() {
 	state = new TextureManagerState();
+
+	state->instanceNode.update();
+
+	for (int f = 0; f < state->devices.size(); f++) {
+		std::cout << "Physical Device Id: " << state->devices[f].deviceNode->getComponent<VulkanDevice>()->getProperties().deviceID << " " << state->devices[f].deviceNode->getComponent<VulkanDevice>()->getProperties().deviceName << std::endl;
+	}
 
 	//createSharedTexture("test", TextureInfo());
 	/*Entity* mainImage = new EntityNode(state->images);
@@ -81,27 +104,27 @@ TextureManager::~TextureManager() {
 	delete state;
 }
 
-void TextureManager::createSharedTexture(const std::string& name, const TextureInfo& info) {
+void TextureManager::createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
 
-	Entity* image = new EntityNode(state->images);
+	Entity* image = new EntityNode(state->getDeviceState(deviceIndex).images);
         image->addComponent(new Image(256, 256, 4));
         image->addComponent(new VulkanExternalImage());
 
 	state->instanceNode.update();
-	state->renderer->render(VULKAN_RENDER_UPDATE_SHARED);
-
-    state->imageMap[name] = image;
+	state->getDeviceState(deviceIndex).renderer->render(VULKAN_RENDER_UPDATE_SHARED);
+    state->getDeviceState(deviceIndex).imageMap[name] = image;
 	//externalHandle = 
 }
 
-Texture TextureManager::getSharedTexture(const std::string& name) {
-	Entity* imageNode = state->imageMap[name];
+Texture TextureManager::getSharedTexture(const std::string& name, int deviceIndex) {
+	Entity* imageNode = state->getDeviceState(deviceIndex).imageMap[name];
 	Image* image = imageNode->getComponent<Image>();
 	Texture tex;
 	tex.width = image->getWidth();
 	tex.height = image->getHeight();
 	tex.components = image->getComponents();
-	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->renderer->getContext());
+	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->getDeviceState(deviceIndex).renderer->getContext());
+	tex.deviceIndex = deviceIndex;
 	return tex;
 }
 

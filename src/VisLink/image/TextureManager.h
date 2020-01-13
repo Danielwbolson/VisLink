@@ -14,8 +14,8 @@ public:
 	TextureManager();
 	~TextureManager();
 
-	void createSharedTexture(const std::string& name, const TextureInfo& info);
-	Texture getSharedTexture(const std::string& name);
+	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex);
+	Texture getSharedTexture(const std::string& name, int deviceIndex);
 
 private:
     TextureManagerState* state;

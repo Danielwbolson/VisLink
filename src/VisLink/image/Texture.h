@@ -21,6 +21,7 @@ struct Texture : TextureInfo {
 	unsigned int externalHandle;
 #endif
 	unsigned int id;
+	int deviceIndex;
 };
 
 class OpenGLTexture {

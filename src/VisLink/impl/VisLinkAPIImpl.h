@@ -10,12 +10,12 @@ namespace vislink {
 
 class VisLinkAPIImpl : public VisLinkAPI {
 public:
-	void createSharedTexture(const std::string& name, const TextureInfo& info) {
-		textureManager.createSharedTexture(name, info);
+	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
+		textureManager.createSharedTexture(name, info, deviceIndex);
 	}
 
-	Texture getSharedTexture(const std::string& name) {
-		return textureManager.getSharedTexture(name);
+	Texture getSharedTexture(const std::string& name, int deviceIndex) {
+		return textureManager.getSharedTexture(name, deviceIndex);
 	}
 
 private:
@@ -33,12 +33,12 @@ public:
 		delete api; 
 	}
 
-	void createSharedTexture(const std::string& name, const TextureInfo& info) {
-		api->createSharedTexture(name, info);
+	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
+		api->createSharedTexture(name, info, deviceIndex);
 	}
 
-	virtual Texture getSharedTexture(const std::string& name) {
-		Texture tex = api->getSharedTexture(name);
+	virtual Texture getSharedTexture(const std::string& name, int deviceIndex) {
+		Texture tex = api->getSharedTexture(name, deviceIndex);
 		OpenGLTexture* openGlTexture = createOpenGLTexture(tex);
 		tex.id = openGlTexture->getId();
 		textures[name] = openGlTexture;

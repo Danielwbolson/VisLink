@@ -14,10 +14,10 @@ public:
 	Server(int listenPort = 3457, int numExpectedClients = 0);
 	~Server();
 
-	void createSharedTexture(const std::string& name, const TextureInfo& info) { 
-		impl.createSharedTexture(name, info); 
+	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) { 
+		impl.createSharedTexture(name, info, deviceIndex); 
 	}
-	Texture getSharedTexture(const std::string& name) { return impl.getSharedTexture(name); }
+	Texture getSharedTexture(const std::string& name, int deviceIndex) { return impl.getSharedTexture(name, deviceIndex); }
 
 	void service();
 

@@ -24,7 +24,7 @@ using namespace sandbox;
 
 GLFWwindow* window;
 GLuint vbo, vao, vshader, fshader, shaderProgram, externalTexture;
-EntityNode mainImage;
+EntityNode mainImage; 
 int windowXPos = 0;
 
 void initGLFW() { 
