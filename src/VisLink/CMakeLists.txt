@@ -8,6 +8,7 @@ include(${CMAKE_FRAMEWORK_DIR}/project/project.cmake)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 set (SOURCEFILES
+  display/TextureDisplay.cpp
   image/Texture.cpp
   image/TextureManager.cpp
   net/NetInterface.cpp
@@ -16,6 +17,7 @@ set (SOURCEFILES
 )
 
 set (HEADERFILES
+  display/TextureDisplay.h
   image/TextureManager.h
   image/Texture.h
   net/Client.h

@@ -24,13 +24,16 @@ private:
 
 class VisLinkOpenGL : public VisLinkAPI {
 public:
-	VisLinkOpenGL(VisLinkAPI* api) : api(api) {}
+	VisLinkOpenGL(VisLinkAPI* api) : api(api), deleteApi(true) {}
+	VisLinkOpenGL(VisLinkAPI& api) : api(&api), deleteApi(false) {}
 	~VisLinkOpenGL() {
 		for (std::map<std::string, OpenGLTexture*>::iterator it = textures.begin(); it != textures.end(); it++) {
 			delete it->second;
 		}
 		
-		delete api; 
+		if (deleteApi) {
+			delete api; 
+		}
 	}
 
 	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
@@ -47,6 +50,7 @@ public:
 
 private:
 	VisLinkAPI* api;
+	bool deleteApi;
 	std::map<std::string, OpenGLTexture*> textures;
 };
 

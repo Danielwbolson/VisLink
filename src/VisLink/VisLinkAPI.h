@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "VisLink/image/Texture.h"
+#include "VisLink/display/TextureDisplay.h"
 
 namespace vislink {
 
