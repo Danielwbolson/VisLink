@@ -27,13 +27,14 @@ int main(int argc, char**argv) {
     glfwInit();
 
 	vislink::VisLinkAPI* api = new vislink::VisLinkAPIImpl();
-    api->createSharedTexture("leftWall", TextureInfo(), 0);
+    api->createSharedTexture("leftWall_l", TextureInfo(), 0);
+    api->createSharedTexture("leftWall_r", TextureInfo(), 0);
     api->createSharedTexture("frontWall", TextureInfo(), 0);
     api->createSharedTexture("rightWall", TextureInfo(), 1);
     api->createSharedTexture("floor", TextureInfo(), 1);
 
     std::vector<vislink::Display*> displays;
-    displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall"), 256, 256, 0, 100));
+    displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall_l"), api->getSharedTexture("leftWall_r"), 256, 256, 0, 100));
     displays.push_back(new TextureDisplay(api->getSharedTexture("frontWall"), 256, 256, 256, 100));
     displays.push_back(new TextureDisplay(api->getSharedTexture("rightWall"), 256, 256, 512, 100));
     displays.push_back(new TextureDisplay(api->getSharedTexture("floor"), 256, 256, 256, 356));
@@ -51,7 +52,7 @@ int main(int argc, char**argv) {
         GLuint internalFormat = GL_RGBA;
         GLuint type = GL_UNSIGNED_BYTE;
 
-        Texture tex = api->getSharedTexture("leftWall");
+        Texture tex = api->getSharedTexture("leftWall_l");
         glBindTexture(GL_TEXTURE_2D, tex.id);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->getWidth(), image->getHeight(), internalFormat, type, image->getData());
     }

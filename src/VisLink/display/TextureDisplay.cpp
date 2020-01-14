@@ -77,8 +77,15 @@ namespace vislink {
 	    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
     	glfwWindowHint(GLFW_DECORATED, false);
+    	glfwWindowHint(GLFW_STEREO, stereo);
 
 	    state->window = glfwCreateWindow(width, height, "Window", nullptr, nullptr);
+	    if (!state->window) {
+    		glfwWindowHint(GLFW_STEREO, false);
+    		state->window = glfwCreateWindow(width, height, "Window", nullptr, nullptr);
+    		stereo = false;
+	    }
+
 	    glfwSetWindowPos (state->window, xPos, yPos);
 
 	    glfwMakeContextCurrent(state->window);
@@ -192,7 +199,25 @@ namespace vislink {
 
 	void TextureDisplay::render() {
 		glfwMakeContextCurrent(state->window);
-        glClearColor(1,1,1,1);
+
+        glActiveTexture(GL_TEXTURE0+0);
+        if (stereo) {
+        	glDrawBuffer(GL_FRONT_LEFT);
+        	glBindTexture(GL_TEXTURE_2D, state->left->getId());
+        	glDrawBuffer(GL_FRONT_RIGHT);
+        	glBindTexture(GL_TEXTURE_2D, state->right->getId());
+        }
+        else {
+        	glBindTexture(GL_TEXTURE_2D, state->left->getId());
+        	renderTexture();
+        }
+
+		glFlush();
+		glfwMakeContextCurrent(0);
+	}
+
+	void TextureDisplay::renderTexture() {
+		glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -210,8 +235,7 @@ namespace vislink {
 
         // Draw quad
         glBindVertexArray(state->vao);
-        glActiveTexture(GL_TEXTURE0+0);
-        glBindTexture(GL_TEXTURE_2D, state->left->getId());
+
         loc = glGetUniformLocation(state->shaderProgram, "tex");
         glUniform1i(loc, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -219,8 +243,6 @@ namespace vislink {
 
         // reset program
         glUseProgram(0);
-		glFlush();
-		glfwMakeContextCurrent(0);
 	}
 
 	void TextureDisplay::finish() {

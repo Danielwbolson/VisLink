@@ -22,6 +22,7 @@ public:
 
 private:
 	void init();
+	void renderTexture();
 
 	Texture left, right;
 	int xPos;
