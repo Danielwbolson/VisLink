@@ -65,6 +65,7 @@ namespace vislink {
 			running = false;
 			readyToRender = false;
 			finishedRendering = false;
+			frame = 0;
 		}
 
 		~DisplayManager() {
@@ -112,24 +113,39 @@ namespace vislink {
 			displays.push_back(new TextureDisplay(api->getSharedTexture("floor"), 256, 256, 256, 356));*/
 
 			while (running) {
-				glfwPollEvents();
+				//glfwPollEvents();
 				{
 					std::unique_lock<std::mutex> lk(mtx);
 					cv.wait(lk);
-					for (int f = 0; f < displays.size(); f++) {
-						displays[f]->render();
-					}
 
-					for (int f = 0; f < displays.size(); f++) {
-						displays[f]->finish();
-					}
+						//for (int f = displays.size() - 1; f >= 0; f--) {
+						//for (int f = 0; f < displays.size(); f++) {
+						for (int f = 0; f < 1; f++) {
+							displays[f]->display();
+						}
+					
+						//for (int f = displays.size() - 1; f >= 0; f--) {
+						for (int f = 0; f < displays.size(); f++) {
+						//for (int f = 0; f < 2; f++) {
+							displays[f]->render();
+						}
 
-					for (int f = 0; f < displays.size(); f++) {
-						displays[f]->display();
-					}
+						//for (int f = displays.size() - 1; f >= 0; f--) {
+						for (int f = 0; f < displays.size(); f++) {
+						//for (int f = 0; f < 2; f++) {
+							displays[f]->finish();
+						}
+
+
+					/*{
+						std::lock_guard<std::mutex> lk(mtx);
+						cv.notify_one(); 
+					}*/
+
 					finishedRendering = true;
-					//lk.unlock();
+					lk.unlock();
 					//cv.notify_one();
+					frame++;
 				}
 			}
 
@@ -147,8 +163,13 @@ namespace vislink {
 		std::vector<OpenGLTexture*> contextTextures;
 
 		void sync() {
-			std::lock_guard<std::mutex> lk(mtx);
-			cv.notify_one();
+
+				std::lock_guard<std::mutex> lk(mtx);
+				cv.notify_one();
+			/*{
+				std::unique_lock<std::mutex> lk(mtx);
+				cv.wait(lk);
+			}*/
 			/*{
 				std::lock_guard<std::mutex> lk(mtx);
 				readyToRender = true;
@@ -163,6 +184,7 @@ namespace vislink {
 			}*/
 
 		}
+		int frame;
 
 	private:
 		bool running;
@@ -210,9 +232,10 @@ extern "C"
 		return dm->contextTextures[index]->getId();
 	}
 
-	EXPORT_API void syncFrame(void* displayManager) {
+	EXPORT_API int syncFrame(void* displayManager) {
 		vislink::DisplayManager* dm = static_cast<vislink::DisplayManager*>(displayManager);
 		dm->sync();
+		return dm->frame;
 	}
 
 	int EXPORT_API PrintANumber() {

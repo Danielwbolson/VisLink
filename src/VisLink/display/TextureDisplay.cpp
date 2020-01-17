@@ -22,13 +22,13 @@ namespace vislink {
 	};
 
 	TextureDisplay::TextureDisplay(Texture tex, int width, int height, int xPos, int yPos, int xTexOffset, int yTexOffset) 
-	 : left(tex), right(tex), xPos(xPos), yPos(yPos), width(width), height(height), xTexOffset(0), yTexOffset(0), stereo(false) {
+	 : left(tex), right(tex), xPos(xPos), yPos(yPos), width(width), height(height), xTexOffset(0), yTexOffset(0), stereo(false), frame(0) {
 	 	
 	 	init();
 	}
 
 	TextureDisplay::TextureDisplay(Texture left, Texture right, int width, int height, int xPos, int yPos, int xTexOffset, int yTexOffset)
-	 : left(left), right(right), xPos(xPos), yPos(yPos), width(width), height(height), xTexOffset(0), yTexOffset(0), stereo(true) {
+	 : left(left), right(right), xPos(xPos), yPos(yPos), width(width), height(height), xTexOffset(0), yTexOffset(0), stereo(true), frame(0) {
 	 	
 	 	init();
 
@@ -208,7 +208,12 @@ namespace vislink {
         	glBindTexture(GL_TEXTURE_2D, state->right->getId());
         }
         else {
-        	glBindTexture(GL_TEXTURE_2D, state->left->getId());
+			//if (frame % 2 == 0) {
+				glBindTexture(GL_TEXTURE_2D, state->left->getId());
+			//}
+			//else {
+			//	glBindTexture(GL_TEXTURE_2D, state->right->getId());
+			//}
         	renderTexture();
         }
 
@@ -255,6 +260,7 @@ namespace vislink {
 		glfwMakeContextCurrent(state->window);
 		glfwSwapBuffers(state->window);
 		glfwMakeContextCurrent(0);
+		frame++;
 	}
 
 	void TextureDisplay::useContext() {

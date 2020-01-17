@@ -33,6 +33,7 @@ private:
 	int yTexOffset;
 	bool stereo;
 	TextureDisplayState* state;
+	int frame;
 };
 
 }
