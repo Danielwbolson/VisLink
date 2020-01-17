@@ -20,6 +20,10 @@
 
 #include "sandbox/image/Image.h"
 
+#include <thread>
+#include <mutex>              // std::mutex, std::unique_lock
+#include <condition_variable> // std::condition_variable
+
 using namespace sandbox;
 
 
@@ -34,19 +38,182 @@ using namespace sandbox;
 #endif
 
 // Link following functions C-style (required for plugins)
-static vislink::Texture tex;
+//static vislink::Texture tex;
+
+namespace vislink {
+
+	struct DisplayInfo {
+		DisplayInfo(std::string name, int width, int height, int xPos, int yPos, int device = 0) : name(name), width(width), height(height), xPos(xPos), yPos(yPos), device(device) {}
+		std::string name;
+		int width;
+		int height;
+		int xPos;
+		int yPos;
+		int device;
+	};
+
+	class DisplayManager
+	{
+	public:
+		DisplayManager() : api(NULL), thread(NULL) {
+			api = new vislink::VisLinkAPIImpl();
+			/*api->createSharedTexture("leftWall_l", TextureInfo(), 0);
+			api->createSharedTexture("leftWall_r", TextureInfo(), 0);
+			api->createSharedTexture("frontWall", TextureInfo(), 0);
+			api->createSharedTexture("rightWall", TextureInfo(), 1);
+			api->createSharedTexture("floor", TextureInfo(), 1);*/
+			running = false;
+			readyToRender = false;
+			finishedRendering = false;
+		}
+
+		~DisplayManager() {
+			running = false;
+			if (thread) {
+				sync();
+				thread->join();
+			}
+			delete thread;
+			delete api;
+		}
+
+		void createDisplay(DisplayInfo displayInfo) {
+			api->createSharedTexture(displayInfo.name + "_l", TextureInfo(), displayInfo.device);
+			api->createSharedTexture(displayInfo.name + "_r", TextureInfo(), displayInfo.device);
+			displayInfos.push_back(displayInfo);
+		}
+
+		void createContextTextures() {
+			//initializeGLExtentions();
+			for (int f = 0; f < displayInfos.size(); f++) {
+				//contextTextures.push_back(NULL);
+				//Texture tex = api->getSharedTexture(displayInfos[f].name + "_l");
+				//contextTextures.push_back(createOpenGLTexture));
+				contextTextures.push_back(createOpenGLTexture(api->getSharedTexture(displayInfos[f].name + "_l")));
+				contextTextures.push_back(createOpenGLTexture(api->getSharedTexture(displayInfos[f].name + "_r")));
+			}
+		}
+
+		void run()
+		{
+			running = true;
+			std::cout << " api " << api << std::endl;
+			glfwInit();
+
+			std::vector<vislink::Display*> displays;
+			for (int f = 0; f < displayInfos.size(); f++) {
+				DisplayInfo displayInfo = displayInfos[f];
+				displays.push_back(new TextureDisplay(api->getSharedTexture(displayInfo.name + "_l"), api->getSharedTexture(displayInfo.name + "_r"), displayInfo.width, displayInfo.height, displayInfo.xPos, displayInfo.yPos));
+			}
+			//displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall_l"), api->getSharedTexture("leftWall_r"), 256, 256, 0, 100));
+			/*displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall_l"), api->getSharedTexture("leftWall_r"), 256, 256, 0, 100));
+			displays.push_back(new TextureDisplay(api->getSharedTexture("frontWall"), 256, 256, 256, 100));
+			displays.push_back(new TextureDisplay(api->getSharedTexture("rightWall"), 256, 256, 512, 100));
+			displays.push_back(new TextureDisplay(api->getSharedTexture("floor"), 256, 256, 256, 356));*/
+
+			while (running) {
+				glfwPollEvents();
+				{
+					std::unique_lock<std::mutex> lk(mtx);
+					cv.wait(lk);
+					for (int f = 0; f < displays.size(); f++) {
+						displays[f]->render();
+					}
+
+					for (int f = 0; f < displays.size(); f++) {
+						displays[f]->finish();
+					}
+
+					for (int f = 0; f < displays.size(); f++) {
+						displays[f]->display();
+					}
+					finishedRendering = true;
+					//lk.unlock();
+					//cv.notify_one();
+				}
+			}
+
+			for (int f = 0; f < displays.size(); f++) {
+				delete displays[f];
+			}
+
+			glfwTerminate();
+		}
+
+		void start() {
+			thread = new std::thread(&DisplayManager::run, this);
+		}
+
+		std::vector<OpenGLTexture*> contextTextures;
+
+		void sync() {
+			std::lock_guard<std::mutex> lk(mtx);
+			cv.notify_one();
+			/*{
+				std::lock_guard<std::mutex> lk(mtx);
+				readyToRender = true;
+				finishedRendering = false;
+			}
+			cv.notify_one();
+			{
+				std::unique_lock<std::mutex> lk(mtx);
+				cv.wait(lk, [this] {return finishedRendering; });
+				readyToRender = false;
+				finishedRendering = false;
+			}*/
+
+		}
+
+	private:
+		bool running;
+		VisLinkAPI* api;
+		std::thread* thread;
+		std::vector<DisplayInfo> displayInfos;
+		std::mutex mtx;
+		std::condition_variable cv;
+		bool readyToRender;
+		bool finishedRendering;
+
+	};
+}
+
+static vislink::DisplayManager* currentDisplayManager = nullptr;
 
 extern "C"
 {
-
-
-	// The functions we will call from Unity.
-	//
-	const EXPORT_API char* PrintHello() {
-		return "Hello\0";
+	EXPORT_API void* createDisplayManager() {
+		vislink::DisplayManager* dm = new vislink::DisplayManager();
+		currentDisplayManager = dm;
+		//dm->start();
+		return dm;
+		//std::thread* th = new std::thread(&vislink::DisplayManager::run, dm); // Pass 10 to member function
 	}
 
+	EXPORT_API void createDisplay(void* displayManager, char* name, int width, int height, int xPos, int yPos, int device) {
+		vislink::DisplayManager* dm = static_cast<vislink::DisplayManager*>(displayManager);
+		dm->createDisplay(vislink::DisplayInfo(name, width, height, xPos, yPos, device));
+	}
 
+	EXPORT_API void startDisplay(void* displayManager) {
+		vislink::DisplayManager* dm = static_cast<vislink::DisplayManager*>(displayManager);
+		dm->start();
+	}
+
+	EXPORT_API void destroyDisplayManager(void* displayManager) {
+		delete static_cast<vislink::DisplayManager*>(displayManager);
+		currentDisplayManager = nullptr;
+	}
+
+	EXPORT_API int getTexture(void* displayManager, int index) {
+		//currentDisplayManager->createContextTextures();
+		vislink::DisplayManager* dm = static_cast<vislink::DisplayManager*>(displayManager);
+		return dm->contextTextures[index]->getId();
+	}
+
+	EXPORT_API void syncFrame(void* displayManager) {
+		vislink::DisplayManager* dm = static_cast<vislink::DisplayManager*>(displayManager);
+		dm->sync();
+	}
 
 	int EXPORT_API PrintANumber() {
 		//vislink::VisLinkAPI* api = new vislink::Client();
@@ -65,18 +232,10 @@ extern "C"
 
 		delete api;*/
 
-		return tex.id;
+		//return tex.id;
+		return 5;
 	}
 
-
-
-	int EXPORT_API AddTwoIntegers(int a, int b) {
-		return a + b;
-	}
-
-	float EXPORT_API AddTwoFloats(float a, float b) {
-		return a + b;
-	}
 } // end of export C block
 
 
@@ -98,55 +257,28 @@ OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 	{
 		s_RendererType = s_Graphics->GetRenderer();
 
-		/*glfwInit();
-
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-		//glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-
-		GLFWwindow* tempWindow = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL", nullptr, nullptr);
-		glfwSetWindowPos(tempWindow, windowXPos, 0);
-
-		glfwMakeContextCurrent(tempWindow);*/ 
-
 		if (s_RendererType == kUnityGfxRendererOpenGLCore) {
 			initializeGLExtentions();
 
-			vislink::Client* client = new vislink::Client();
+			/*vislink::Client* client = new vislink::Client();
 			vislink::VisLinkAPI* api = client;
 			api = new vislink::VisLinkOpenGL(api); 
-			tex = api->getSharedTexture("test.png");
-			//client->sendData(client->socketFD, (unsigned char*)& tex.id, sizeof(int));
-			/*
-			vislink::VisLinkAPI* api = new vislink::VisLinkAPIImpl();
-			api->createSharedTexture("test.png", vislink::TextureInfo());
-			api = new vislink::VisLinkOpenGL(api);
-			tex = api->getSharedTexture("test.png");
-			//tex.id = 2;*/
+			tex = api->getSharedTexture("test.png");*/
 		}
-		//glfwMakeContextCurrent(NULL);
-		//vislink::Texture tex = api->getSharedTexture("test.png");
-		//glfwDestroyWindow(tempWindow);
 
 		break;
 	}
 	case kUnityGfxDeviceEventShutdown:
 	{
 		s_RendererType = kUnityGfxRendererNull;
-		//glfwTerminate();
 		break;
 	}
 	case kUnityGfxDeviceEventBeforeReset:
 	{
-		//TODO: user Direct3D 9 code
 		break;
 	}
 	case kUnityGfxDeviceEventAfterReset:
 	{
-		//TODO: user Direct3D 9 code
 		break;
 	}
 	};
@@ -171,4 +303,22 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 UnityPluginUnload()
 {
 	s_Graphics->UnregisterDeviceEventCallback(OnGraphicsDeviceEvent);
+}
+
+// Plugin function to handle a specific rendering event
+static void UNITY_INTERFACE_API OnCreateTextures(int eventID)
+{
+	if (currentDisplayManager) {
+		s_RendererType = s_Graphics->GetRenderer();
+		//if (s_RendererType == kUnityGfxRendererOpenGLCore) {
+			currentDisplayManager->createContextTextures();
+		//}
+	}
+}
+
+// Freely defined function to pass a callback to plugin-specific scripts
+extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
+GetCreateTexturesFunc()
+{
+	return OnCreateTextures;
 }

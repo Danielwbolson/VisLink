@@ -82,7 +82,7 @@ void textureInitExtensions() {
 		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
 			get_proc("glCreateTextures");
 	    initialized = true;
-		close_libgl();
+	    close_libgl();
 		std::cout << "wgl get proc" << std::endl;
 	}
 }
@@ -142,7 +142,6 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex) {
 #else
     glImportMemoryFdEXT(mem, tex.width*tex.height*tex.components, GL_HANDLE_TYPE_OPAQUE_FD_EXT, newHandle);
 #endif
-	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 
     glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, tex.width, tex.height, mem, 0 );

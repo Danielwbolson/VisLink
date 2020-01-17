@@ -22,6 +22,8 @@ set (HEADERFILES
   image/Texture.h
   net/Client.h
   net/Server.h
+  VisLinkAPI.h
+  impl/VisLinkAPIImpl.h
 )
 
 #set(SANDBOX_DIR ${CMAKE_SOURCE_DIR}/../sandbox)

@@ -157,7 +157,7 @@ namespace vislink {
                 "uniform sampler2D tex; "
                 ""
                 "void main() { "
-                "   vec2 coord = vec2(col.x, 1.0-col.y);"
+                "   vec2 coord = vec2(col.x, col.y);"
                 "   vec4 texColor = texture(tex, coord);"
                 "   colorOut = texColor; "
                 "}";
