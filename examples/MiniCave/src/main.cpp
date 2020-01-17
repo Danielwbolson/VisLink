@@ -67,6 +67,9 @@ int main(int argc, char**argv) {
     }
     displays[0]->releaseContext();
 
+    int frame = 0;
+    double lastTime = glfwGetTime();
+
     while(true) {
         for (int f = 0; f < displays.size(); f++) {
             displays[f]->render();
@@ -79,6 +82,16 @@ int main(int argc, char**argv) {
         for (int f = 0; f < displays.size(); f++) {
             displays[f]->display();
         }
+
+        if (frame % 1000 == 0) {
+            //std::cout << 
+            double newTime = glfwGetTime();
+            float fps = 1000.0f / (newTime - lastTime);
+            std::cout << fps << std::endl;
+            lastTime = newTime;
+        }
+
+        frame++;
     }
 
     for (int f = 0; f < displays.size(); f++) {

@@ -75,7 +75,7 @@ namespace vislink {
 	    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
+	    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, false);
     	glfwWindowHint(GLFW_DECORATED, false);
     	glfwWindowHint(GLFW_STEREO, stereo);
 
@@ -207,8 +207,10 @@ namespace vislink {
         if (stereo) {
         	glDrawBuffer(GL_FRONT_LEFT);
         	glBindTexture(GL_TEXTURE_2D, state->left->getId());
+        	renderTexture();
         	glDrawBuffer(GL_FRONT_RIGHT);
         	glBindTexture(GL_TEXTURE_2D, state->right->getId());
+        	renderTexture();
         }
         else {
 			//if (frame % 2 == 0) {
