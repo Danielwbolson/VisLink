@@ -119,8 +119,8 @@ namespace vislink {
 					cv.wait(lk);
 
 						//for (int f = displays.size() - 1; f >= 0; f--) {
-						//for (int f = 0; f < displays.size(); f++) {
-						for (int f = 0; f < 1; f++) {
+						for (int f = 0; f < displays.size(); f++) {
+						//for (int f = 0; f < 1; f++) {
 							displays[f]->display();
 						}
 					

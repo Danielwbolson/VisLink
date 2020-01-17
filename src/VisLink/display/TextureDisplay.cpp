@@ -140,7 +140,7 @@ namespace vislink {
                // "uniform mat4 ProjectionMatrix; "
                // "uniform mat4 ViewMatrix; "
                // "uniform mat4 ModelMatrix; "
-                "uniform mat4 NormalMatrix; "
+               // "uniform mat4 NormalMatrix; "
                 ""
                 "out vec3 col;"
                 ""
@@ -168,6 +168,10 @@ namespace vislink {
         glAttachShader(state->shaderProgram, state->vshader);
         glAttachShader(state->shaderProgram, state->fshader);
         TextureDisplaylinkShaderProgram(state->shaderProgram);
+
+		glActiveTexture(GL_TEXTURE0 + 0);
+		GLint loc = glGetUniformLocation(state->shaderProgram, "tex");
+		glUniform1i(loc, 0);
 
         GLuint format = GL_RGBA;
         GLuint internalFormat = GL_RGBA;
@@ -200,7 +204,6 @@ namespace vislink {
 	void TextureDisplay::render() {
 		glfwMakeContextCurrent(state->window);
 
-        glActiveTexture(GL_TEXTURE0+0);
         if (stereo) {
         	glDrawBuffer(GL_FRONT_LEFT);
         	glBindTexture(GL_TEXTURE_2D, state->left->getId());
@@ -222,27 +225,25 @@ namespace vislink {
 	}
 
 	void TextureDisplay::renderTexture() {
-		glClearColor(1,1,1,1);
-        glClear(GL_COLOR_BUFFER_BIT);
+		//glClearColor(1,1,1,1);
+        //glClear(GL_COLOR_BUFFER_BIT);
 
-        glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        /*glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
-        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);*/
 
         // Set shader parameters
         glUseProgram(state->shaderProgram);
-        GLint loc = glGetUniformLocation(state->shaderProgram, "ProjectionMatrix");
+		/*GLint loc = glGetUniformLocation(state->shaderProgram, "ProjectionMatrix");
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(proj));
         loc = glGetUniformLocation(state->shaderProgram, "ViewMatrix");
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(view));
         loc = glGetUniformLocation(state->shaderProgram, "ModelMatrix");
-        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(model));*/
 
         // Draw quad
         glBindVertexArray(state->vao);
 
-        loc = glGetUniformLocation(state->shaderProgram, "tex");
-        glUniform1i(loc, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
