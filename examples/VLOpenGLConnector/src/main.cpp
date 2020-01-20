@@ -56,7 +56,8 @@ namespace vislink {
 	{
 	public:
 		DisplayManager() : api(NULL), thread(NULL) {
-			api = new vislink::VisLinkAPIImpl();
+			server = new vislink::Server();
+			api = server;
 			/*api->createSharedTexture("leftWall_l", TextureInfo(), 0);
 			api->createSharedTexture("leftWall_r", TextureInfo(), 0);
 			api->createSharedTexture("frontWall", TextureInfo(), 0);
@@ -105,6 +106,7 @@ namespace vislink {
 			for (int f = 0; f < displayInfos.size(); f++) {
 				DisplayInfo displayInfo = displayInfos[f];
 				displays.push_back(new TextureDisplay(api->getSharedTexture(displayInfo.name + "_l"), api->getSharedTexture(displayInfo.name + "_r"), displayInfo.width, displayInfo.height, displayInfo.xPos, displayInfo.yPos));
+				displays[f]->init();
 			}
 			//displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall_l"), api->getSharedTexture("leftWall_r"), 256, 256, 0, 100));
 			/*displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall_l"), api->getSharedTexture("leftWall_r"), 256, 256, 0, 100));
@@ -113,7 +115,7 @@ namespace vislink {
 			displays.push_back(new TextureDisplay(api->getSharedTexture("floor"), 256, 256, 256, 356));*/
 
 			while (running) {
-				//glfwPollEvents();
+				glfwPollEvents();
 				{
 					std::unique_lock<std::mutex> lk(mtx);
 					cv.wait(lk);
@@ -165,6 +167,7 @@ namespace vislink {
 		void sync() {
 
 				std::lock_guard<std::mutex> lk(mtx);
+				server->service();
 				cv.notify_one();
 			/*{
 				std::unique_lock<std::mutex> lk(mtx);
@@ -189,6 +192,7 @@ namespace vislink {
 	private:
 		bool running;
 		VisLinkAPI* api;
+		Server* server;
 		std::thread* thread;
 		std::vector<DisplayInfo> displayInfos;
 		std::mutex mtx;

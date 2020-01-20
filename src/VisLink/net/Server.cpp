@@ -200,7 +200,13 @@ void Server::service() {
     //wait for an activity on one of the sockets , timeout is NULL ,  
     //so wait indefinitely  
 #ifdef WIN32
-	int activity = select(0, &readfds, NULL, NULL, NULL);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 200;
+	int activity = select(0, &readfds, NULL, NULL, &timeout);
+	if (activity == 0) {
+		return;
+	}
 #else
 	int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
 #endif
