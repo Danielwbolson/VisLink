@@ -24,13 +24,13 @@ namespace vislink {
 	TextureDisplay::TextureDisplay(Texture tex, int width, int height, int xPos, int yPos, int xTexOffset, int yTexOffset) 
 	 : left(tex), right(tex), xPos(xPos), yPos(yPos), width(width), height(height), xTexOffset(0), yTexOffset(0), stereo(false), frame(0) {
 	 	
-	 	init();
+	 	//init();
 	}
 
 	TextureDisplay::TextureDisplay(Texture left, Texture right, int width, int height, int xPos, int yPos, int xTexOffset, int yTexOffset)
 	 : left(left), right(right), xPos(xPos), yPos(yPos), width(width), height(height), xTexOffset(0), yTexOffset(0), stereo(true), frame(0) {
 	 	
-	 	init();
+	 	//init();
 
 	}
 

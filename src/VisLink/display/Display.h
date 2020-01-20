@@ -7,6 +7,7 @@ namespace vislink {
 
 class Display {
 public:
+	virtual void init() = 0;
 	virtual void render() = 0;
 	virtual void finish() = 0;
 	virtual void display() = 0;

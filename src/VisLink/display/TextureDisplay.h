@@ -14,6 +14,7 @@ public:
 	TextureDisplay(Texture left, Texture right, int width, int height, int xPos = 0, int yPos = 0, int xTexOffset = 0, int yTexOffset = 0);
 	virtual ~TextureDisplay();
 
+	void init();
 	void render();
 	void finish();
 	void display();
@@ -21,7 +22,6 @@ public:
 	void releaseContext();
 
 private:
-	void init();
 	void renderTexture();
 
 	Texture left, right;

@@ -141,14 +141,14 @@ namespace vislink {
 						std::lock_guard<std::mutex> lk(mtx);
 						cv.notify_one(); 
 					}*/
+						lk.unlock();
 
 					finishedRendering = true;
-					lk.unlock();
 					//cv.notify_one();
 					frame++;
 				}
 			}
-
+			 
 			for (int f = 0; f < displays.size(); f++) {
 				delete displays[f];
 			}
