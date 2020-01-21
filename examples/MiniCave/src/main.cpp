@@ -55,8 +55,8 @@ int main(int argc, char**argv) {
     api->createSharedTexture("leftWall_l", TextureInfo(), 0);
     api->createSharedTexture("leftWall_r", TextureInfo(), 0);
     api->createSharedTexture("frontWall", TextureInfo(), 0);
-    api->createSharedTexture("rightWall", TextureInfo(), 1);
-    api->createSharedTexture("floor", TextureInfo(), 1);
+    api->createSharedTexture("rightWall", TextureInfo(), 0);
+    api->createSharedTexture("floor", TextureInfo(), 0);
 
     //std::vector<vislink::Display*> displays;
     displays.push_back(new TextureDisplay(api->getSharedTexture("leftWall_l"), api->getSharedTexture("leftWall_r"), 256, 256, 0, 100));
@@ -96,9 +96,9 @@ int main(int argc, char**argv) {
     int frame = 0;
     double lastTime = glfwGetTime();
 
-	for (int f = 0; f < displays.size(); f++) {
+	/*for (int f = 0; f < displays.size(); f++) {
 		displays[f]->init();
-	}
+	}*/
 	std::thread thread1(run, 1);
 	std::thread thread2(run, 2);
 	std::thread thread3(run, 3);

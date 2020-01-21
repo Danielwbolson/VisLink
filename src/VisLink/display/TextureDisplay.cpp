@@ -79,14 +79,20 @@ namespace vislink {
     	glfwWindowHint(GLFW_DECORATED, false);
     	glfwWindowHint(GLFW_STEREO, stereo);
 
+		/* GLFW says: If you wish to set an initial window position, you should create a hidden window, set its position, then show it*/
+		glfwWindowHint(GLFW_VISIBLE, false);
+
 	    state->window = glfwCreateWindow(width, height, "Window", nullptr, nullptr);
+		std::cout << "Create Window" << std::endl;
 	    if (!state->window) {
+			std::cout << "Non Stereo" << std::endl;
     		glfwWindowHint(GLFW_STEREO, false);
     		state->window = glfwCreateWindow(width, height, "Window", nullptr, nullptr);
     		stereo = false;
 	    }
 
 	    glfwSetWindowPos (state->window, xPos, yPos);
+		glfwShowWindow(state->window);
 
 	    glfwMakeContextCurrent(state->window);
 	    initializeGLExtentions();
