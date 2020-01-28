@@ -46,6 +46,9 @@ include(${external_dir}/OpenGL/OpenGL.cmake)
 useOpenGL()
 useGLEW()
 
+include(${external_dir}/CPP11/CPP11.cmake)
+useCPP11()
+
 
 # --------------------- Executable -----------------------
 
