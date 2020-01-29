@@ -24,8 +24,8 @@ private:
 
 class VisLinkOpenGL : public VisLinkAPI {
 public:
-	VisLinkOpenGL(VisLinkAPI* api) : api(api), deleteApi(true) {}
-	VisLinkOpenGL(VisLinkAPI& api) : api(&api), deleteApi(false) {}
+	VisLinkOpenGL(VisLinkAPI* api, ProcLoader* procLoader = NULL) : api(api), deleteApi(true), procLoader(procLoader) {}
+	VisLinkOpenGL(VisLinkAPI& api, ProcLoader* procLoader = NULL) : api(&api), deleteApi(false), procLoader(procLoader) {}
 	~VisLinkOpenGL() {
 		for (std::map<std::string, OpenGLTexture*>::iterator it = textures.begin(); it != textures.end(); it++) {
 			delete it->second;
@@ -34,15 +34,21 @@ public:
 		if (deleteApi) {
 			delete api; 
 		}
+
+		if (procLoader) {
+			delete procLoader;
+		}
 	}
 
 	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
+		std::cout << "createSharedTexture" << std::endl;
 		api->createSharedTexture(name, info, deviceIndex);
 	}
 
 	virtual Texture getSharedTexture(const std::string& name, int deviceIndex) {
+		std::cout << "getSharedTexture" << std::endl;
 		Texture tex = api->getSharedTexture(name, deviceIndex);
-		OpenGLTexture* openGlTexture = createOpenGLTexture(tex);
+		OpenGLTexture* openGlTexture = createOpenGLTexture(tex, procLoader);
 		tex.id = openGlTexture->getId();
 		textures[name] = openGlTexture;
 		return tex;
@@ -52,6 +58,7 @@ private:
 	VisLinkAPI* api;
 	bool deleteApi;
 	std::map<std::string, OpenGLTexture*> textures;
+	ProcLoader* procLoader;
 };
 
 }

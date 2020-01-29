@@ -89,20 +89,32 @@ void textureInitExtensions() {
 
 #else
 
-void textureInitExtensions() {
+class VLGlfwProcLoader : public ProcLoader {
+public:
+	VLProc getProc(const char* name) {
+		return glfwGetProcAddress(name);
+	}
+};
+
+void textureInitExtensions(ProcLoader* procLoader) {
+	static VLGlfwProcLoader defaultLoader;
+	if (!procLoader) {
+		procLoader = &defaultLoader;
+	}
+
 	static bool initialized = false;
 	if (!initialized) {
 	    pfnCreateMemoryObjectsEXT = (PFNGLCREATEMEMORYOBJECTSEXTPROC)
-			glfwGetProcAddress("glCreateMemoryObjectsEXT");
+			procLoader->getProc("glCreateMemoryObjectsEXT");
 		pfnImportMemoryFdEXT = (PFNGLIMPORTMEMORYFDEXTPROC)
-			glfwGetProcAddress("glImportMemoryFdEXT");
+			procLoader->getProc("glImportMemoryFdEXT");
 		pfnTextureStorageMem2DEXT = (PFNGLTEXTURESTORAGEMEM2DEXTPROC)
-			glfwGetProcAddress("glTextureStorageMem2DEXT");
+			procLoader->getProc("glTextureStorageMem2DEXT");
 		pfnDeleteMemoryObjectsEXT = (PFNGLDELETEMEMORYOBJECTSEXTPROC)
-			glfwGetProcAddress("glDeleteMemoryObjectsEXT");
+			procLoader->getProc("glDeleteMemoryObjectsEXT");
 		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
-			glfwGetProcAddress("glCreateTextures");
-	    initialized = true;
+			procLoader->getProc("glCreateTextures");
+	    //initialized = true;
 	}
 }
 
@@ -122,13 +134,14 @@ public:
 	Texture texture;
 };
 
-OpenGLTexture* createOpenGLTexture(const Texture& tex) {
-	textureInitExtensions();
+OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
 
 	
 #ifdef WIN32
+	textureInitExtensions();
 	HANDLE newHandle = tex.externalHandle;
 #else
+	textureInitExtensions(procLoader);
 	int newHandle = tex.externalHandle;
 	newHandle = dup(newHandle);
 #endif

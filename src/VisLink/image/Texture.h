@@ -8,6 +8,13 @@
 
 namespace vislink {
 
+typedef void(* VLProc) (void);
+class ProcLoader {
+public:
+	virtual ~ProcLoader() {}
+	virtual VLProc getProc(const char* name) = 0;
+};
+
 struct TextureInfo {
 	int width;
 	int height;
@@ -31,7 +38,7 @@ public:
 	virtual const Texture& getTexture() const = 0;
 };
 
-OpenGLTexture* createOpenGLTexture(const Texture& texture);
+OpenGLTexture* createOpenGLTexture(const Texture& texture, ProcLoader* procLoader = NULL);
 
 
 }
