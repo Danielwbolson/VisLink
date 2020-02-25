@@ -2,6 +2,60 @@
 //#include <GLFW/glfw3.h>
 //#include "OpenGL.h"
 
+#include <windows.h>
+#include <iostream>
+#include <string>
+
+/* Define a function pointer for our imported
+ * function.
+ * This reads as "introduce the new type f_funci as the type:
+ *                pointer to a function returning an int and
+ *                taking no arguments.
+ *
+ * Make sure to use matching calling convention (__cdecl, __stdcall, ...)
+ * with the exported function. __stdcall is the convention used by the WinAPI
+ */
+typedef void* (__stdcall* f_CreateOpenGLClientAPI)();
+typedef void (__stdcall* f_destroyAPI)(void*);
+
+template<typename T>
+T createFunction(HINSTANCE instance, const std::string& name) {
+	T fun = (T)GetProcAddress(instance, name.c_str());
+	if (!fun) {
+		std::cout << "could not locate the function " << name << std::endl;
+		exit(0);
+		//return EXIT_FAILURE;
+	}
+	return fun;
+}
+
+int main()
+{
+	HINSTANCE hGetProcIDDLL = LoadLibrary("D:\\home\\dan\\src\\VisLink\\build\\bin\\VLOpenGLConnector.dll");
+
+	if (!hGetProcIDDLL) {
+		std::cout << "could not load the dynamic library" << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	// resolve function address here
+	/*f_CreateOpenGLClientAPI createOpenGLClientAPI = (f_CreateOpenGLClientAPI)GetProcAddress(hGetProcIDDLL, "createOpenGLClientAPI");
+	if (!createOpenGLClientAPI) {
+		std::cout << "could not locate the function" << std::endl;
+		exit(0);
+		//return EXIT_FAILURE;
+	}*/
+	f_CreateOpenGLClientAPI createOpenGLClientAPI = createFunction<f_CreateOpenGLClientAPI>(hGetProcIDDLL, "createOpenGLClientAPI");
+	f_destroyAPI destroyAPI = createFunction<f_destroyAPI>(hGetProcIDDLL, "destroyAPI");
+
+	void* api = createOpenGLClientAPI();
+	std::cout << "PrintANumber() returned " << api << std::endl;
+	destroyAPI(api);
+
+	return EXIT_SUCCESS;
+}
+
+#ifdef ABCDE
 #include "OpenGL.h"
 #include <GLFW/glfw3.h>
 
@@ -50,6 +104,8 @@ void run(int index) {
 }
 
 int main(int argc, char**argv) {
+
+
     glfwInit();
 
     api->createSharedTexture("leftWall_l", TextureInfo(), 0);
@@ -143,3 +199,4 @@ int main(int argc, char**argv) {
 }
 
 
+#endif

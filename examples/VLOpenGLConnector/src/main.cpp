@@ -263,6 +263,21 @@ extern "C"
 		return 5;
 	}
 
+	EXPORT_API void* createOpenGLClientAPI() {
+		return new vislink::VisLinkOpenGL(new vislink::Client());
+	}
+
+	EXPORT_API int getSharedTextureId(void* api, const char* name, int deviceId) {
+		vislink::VisLinkAPI* apiInstance = static_cast<vislink::VisLinkAPI*>(api);
+		vislink::Texture tex = apiInstance->getSharedTexture(name, deviceId);
+		return tex.id;
+	}
+
+	EXPORT_API void destroyAPI(void* api) {
+		vislink::VisLinkAPI* apiInstance = static_cast<vislink::VisLinkAPI*>(api);
+		delete apiInstance;
+	}
+
 } // end of export C block
 
 
