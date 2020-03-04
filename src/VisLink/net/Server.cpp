@@ -272,6 +272,17 @@ void Server::service() {
                 std::cout <<"Host disconnected " << std::endl;   
                 clientSocketFDs[f] = 0;
             }
+            else if (messageType == MSG_createSharedTexture) {
+                unsigned char* buf = new unsigned char[dataLength+1];
+                receiveData(sd, buf, dataLength);
+                int deviceIndex;
+                receiveData(sd, (unsigned char*)& deviceIndex, sizeof(int));
+                buf[dataLength] = '\0';
+                std::string val(reinterpret_cast<char*>(buf));
+                TextureInfo info;
+                receiveData(sd, (unsigned char*)& info, sizeof(TextureInfo));
+                createSharedTexture(val, info, deviceIndex);
+            }
             else if (messageType == MSG_getSharedTexture) {
                 unsigned char* buf = new unsigned char[dataLength+1];
                 receiveData(sd, buf, dataLength);

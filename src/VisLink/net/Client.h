@@ -14,7 +14,11 @@ public:
 	Client(const std::string &serverIP = "127.0.0.1", int serverPort = 3457);
 	~Client();
 
-	virtual void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {}
+	virtual void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
+	    sendMessage(socketFD, MSG_createSharedTexture, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
+	    sendData(socketFD, (unsigned char*)& deviceIndex, sizeof(int));
+	    sendData(socketFD, (unsigned char*)& info, sizeof(TextureInfo));
+	}
 
 	virtual Texture getSharedTexture(const std::string& name, int deviceIndex) { 
 	    sendMessage(socketFD, MSG_getSharedTexture, (const unsigned char*)name.c_str(), sizeof(name.c_str()));

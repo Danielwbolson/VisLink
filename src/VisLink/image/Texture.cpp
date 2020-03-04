@@ -114,7 +114,7 @@ void textureInitExtensions(ProcLoader* procLoader) {
 			procLoader->getProc("glDeleteMemoryObjectsEXT");
 		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
 			procLoader->getProc("glCreateTextures");
-	    //initialized = true;
+	    initialized = true;
 	}
 }
 
