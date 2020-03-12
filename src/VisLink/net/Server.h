@@ -11,19 +11,32 @@
 
 namespace vislink {
 
-class ServerMessageQueue : public MessageQueue {
+class ServerMessageQueue {
 public:
-	ServerMessageQueue(NetInterface* net, int id);
+	ServerMessageQueue(NetInterface* net, int id) : net(net), id(id), currentMessageId(0), sending(false) {}
 	virtual ~ServerMessageQueue() {}
-	int getId();
-	void waitForMessage();
-	void sendMessage();
-	int sendData(const unsigned char *buf, int len);
-	int receiveData(unsigned char *buf, int len);
+	int getId() { return id; }
+	void pushClient(SOCKET clientFD);
+	void pushMessage();
+	void pushMessageData(SOCKET sd);
 private:
+	struct Message {
+		Message(int id) : id(id), data(NULL) {}
+		bool isStart() { return !data; }
+
+		int id;
+		unsigned char* data;
+		int len;
+	};
+
+	void sendData();
+
 	NetInterface* net;
-	std::queue<SOCKET> clientSocketFDQueue;
+	std::queue<SOCKET> clientWaitQueue;
+	std::queue<Message> sendDataQueue;
 	int id;
+	int currentMessageId;
+	bool sending;
 };
 
 class Server : public NetInterface {
@@ -54,26 +67,28 @@ public:
 	void service();
 
 private:
-	MessageQueue* getServerMessageQueue(const std::string& name) { 
+	ServerMessageQueue* getServerMessageQueue(const std::string& name) { 
 		std::map<std::string,int>::iterator it = messageQueueMap.find(name);
 		int id = messageQueues.size();
 		if (it != messageQueueMap.end()) {
 			id = it->second;
 		}
 		else {
-			MessageQueue* queue = new ServerMessageQueue(this, id);
+			ServerMessageQueue* queue = new ServerMessageQueue(this, id);
 			messageQueueMap[name] = id;
 			messageQueues.push_back(queue);
 		}
 		return messageQueues[id];
 	}
 
+	ServerMessageQueue* getQueueFromMessage(SOCKET sd);
+
 	SOCKET serverSocketFD;
 	std::vector<SOCKET> clientSocketFDs;
 	VisLinkAPIImpl impl;
 	fd_set readfds;
 	std::map<std::string, int> messageQueueMap;
-	std::vector<MessageQueue*> messageQueues;
+	std::vector<ServerMessageQueue*> messageQueues;
 };
 
 }

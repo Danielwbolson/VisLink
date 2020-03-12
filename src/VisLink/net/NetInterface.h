@@ -55,7 +55,9 @@ enum NetMessageType {
 	MSG_getSharedTexture = 2,
 	MSG_getMessageQueue = 3,
 	MSG_sendQueueMessage = 4,
-	MSG_receiveQueueMessage = 5
+	MSG_receiveQueueMessage = 5,
+	MSG_sendQueueData = 6,
+	MSG_receiveQueueData = 7
 };
 
 class NetInterface : public VisLinkAPI {

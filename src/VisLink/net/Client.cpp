@@ -219,9 +219,14 @@ void ClientMessageQueue::sendMessage() {
   net->sendMessage(socketFD, MSG_sendQueueMessage, (unsigned char *)&id, sizeof(int));
 }
 int ClientMessageQueue::sendData(const unsigned char *buf, int len) {
+  int id = getId();
+  net->sendMessage(socketFD, MSG_sendQueueData, (unsigned char *)&id, sizeof(int));
+  net->sendData(socketFD, (unsigned char *)&len, sizeof(int));
   return net->sendData(socketFD, buf, len);
 }
 int ClientMessageQueue::receiveData(unsigned char *buf, int len) {
+  int id = getId();
+  net->sendMessage(socketFD, MSG_receiveQueueData, (unsigned char *)&id, sizeof(int));
   return net->receiveData(socketFD, buf, len);
 }
 

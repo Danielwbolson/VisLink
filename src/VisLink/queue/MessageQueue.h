@@ -20,7 +20,7 @@ public:
 	}
 
 	template<typename T>
-	T getObject() {
+	T receiveObject() {
 		T obj;
 		receiveData((unsigned char*)& obj, sizeof(T));
 		return obj;

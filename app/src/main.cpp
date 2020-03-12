@@ -216,12 +216,16 @@ int main(int argc, char**argv) {
             return 0;
         }
     }
-	
+
 
 	if (pid == 0 || argc > 1) {
 		vislink::Client* client = new vislink::Client();
 		api = client;
 	}
+    
+    vislink::MessageQueue* startFrame =  api->getMessageQueue("start");
+    vislink::MessageQueue* finishFrame =  api->getMessageQueue("finish");
+
     
     initGLFW();
 
@@ -245,8 +249,19 @@ int main(int argc, char**argv) {
 	    std::cout << "updating texture " << externalTexture << std::endl;
     }
 
+    int frame = 0;
 
 	while (!glfwWindowShouldClose(window)) { 
+        if (argc == 1) {
+            startFrame->sendMessage();
+            startFrame->sendObject<int>(frame);
+            std::cout << frame << std::endl;
+        }
+        else {
+            startFrame->waitForMessage();
+            std::cout << startFrame->receiveObject<int>() << std::endl;
+        }
+
 		glfwPollEvents();
 		glfwMakeContextCurrent(window);
         glClearColor(1,1,1,1);
@@ -278,6 +293,15 @@ int main(int argc, char**argv) {
         glUseProgram(0);
 
         glfwSwapBuffers(window);
+
+        frame++;
+
+        if (argc == 1) {
+            finishFrame->waitForMessage();
+        }
+        else {
+            finishFrame->sendMessage();
+        }
 	}
 
     delete api;

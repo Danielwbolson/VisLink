@@ -282,6 +282,7 @@ void Server::service() {
                 TextureInfo info;
                 receiveData(sd, (unsigned char*)& info, sizeof(TextureInfo));
                 createSharedTexture(val, info, deviceIndex);
+                delete[] buf;
             }
             else if (messageType == MSG_getSharedTexture) {
                 unsigned char* buf = new unsigned char[dataLength+1];
@@ -315,10 +316,93 @@ void Server::service() {
 				//int texId = 0;
 				//receiveData(sd, (unsigned char*)& texId, sizeof(int));
 				//std::cout << "tex id: " << texId << std::endl;
+                delete[] buf;
 
+            }
+            else if (messageType == MSG_getMessageQueue) {
+                unsigned char* buf = new unsigned char[dataLength+1];
+                receiveData(sd, buf, dataLength);
+                buf[dataLength] = '\0';
+                std::string val(reinterpret_cast<char*>(buf));
+                ServerMessageQueue* queue = getServerMessageQueue(val);
+                int queueId = queue->getId();
+                sendData(sd, (unsigned char*)& queueId, sizeof(queueId));
+                delete[] buf;
+            }
+            else if (messageType == MSG_sendQueueMessage) {
+                ServerMessageQueue* queue = getQueueFromMessage(sd);
+                queue->pushMessage();
+            }
+            else if (messageType == MSG_receiveQueueMessage) {
+                ServerMessageQueue* queue = getQueueFromMessage(sd);
+                queue->pushClient(sd);
+            }
+            else if (messageType == MSG_sendQueueData) {
+                ServerMessageQueue* queue = getQueueFromMessage(sd);
+                queue->pushMessageData(sd);
+            }
+            else if (messageType == MSG_receiveQueueData) {
+                ServerMessageQueue* queue = getQueueFromMessage(sd);
             }
         }
 
+    }
+}
+
+ServerMessageQueue* Server::getQueueFromMessage(SOCKET sd) {
+    int queueId;
+    receiveData(sd, (unsigned char*)& queueId, sizeof(queueId));
+    return messageQueues[queueId];
+}
+
+void ServerMessageQueue::pushClient(SOCKET clientFD) {
+    clientWaitQueue.push(clientFD);
+    sendData();
+}
+
+void ServerMessageQueue::pushMessage() {
+    currentMessageId++;
+    sendDataQueue.push(Message(currentMessageId));
+    sendData();
+}
+
+void ServerMessageQueue::pushMessageData(SOCKET sd) {
+    int len;
+    net->receiveData(sd, (unsigned char*)& len, sizeof(len));
+    unsigned char* buf = new unsigned char[len];
+    net->receiveData(sd, buf, len);
+    Message msg = Message(currentMessageId);
+    msg.data = buf;
+    msg.len = len;
+    sendDataQueue.push(msg);
+    sendData();
+}
+
+void ServerMessageQueue::sendData() {
+    while (!clientWaitQueue.empty() && !sendDataQueue.empty()) {
+        
+        Message msg = sendDataQueue.front();
+
+        if (msg.isStart() && sending) {
+            clientWaitQueue.pop();
+        }
+
+        sending = !clientWaitQueue.empty();
+
+        if (sending) {
+            SOCKET client = clientWaitQueue.front();
+
+            if (msg.isStart()) {
+                net->sendData(client, (unsigned char *)&msg.id, sizeof(int));
+                sending = true;
+            }
+            else {
+                net->sendData(client, msg.data, msg.len);
+                delete[] msg.data;
+            }
+
+            sendDataQueue.pop();
+        }
     }
 }
 
