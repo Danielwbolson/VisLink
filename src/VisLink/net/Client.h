@@ -9,6 +9,21 @@
 
 namespace vislink {
 
+class ClientMessageQueue : public MessageQueue {
+public:
+	ClientMessageQueue(NetInterface* net, SOCKET socketFD, int id);
+	virtual ~ClientMessageQueue() {}
+	int getId();
+	void waitForMessage();
+	void sendMessage();
+	int sendData(const unsigned char *buf, int len);
+	int receiveData(unsigned char *buf, int len);
+private:
+	NetInterface* net;
+	SOCKET socketFD;
+	int id;
+};
+
 class Client : public NetInterface  {
 public:
 	Client(const std::string &serverIP = "127.0.0.1", int serverPort = 3457);
@@ -53,7 +68,17 @@ public:
 		return tex;
 	}
 
+	MessageQueue* getMessageQueue(const std::string& name) { 
+		sendMessage(socketFD, MSG_getMessageQueue, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
+		int queueId;
+		receiveData(socketFD, (unsigned char*)& queueId, sizeof(queueId));
+		MessageQueue* queue = new ClientMessageQueue(this, socketFD, queueId);
+		messageQueues.push_back(queue);
+		return queue;
+	}
+
 private:
+	std::vector<MessageQueue*> messageQueues;
 	SOCKET socketFD;
 };
 

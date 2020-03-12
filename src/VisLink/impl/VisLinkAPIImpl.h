@@ -18,6 +18,8 @@ public:
 		return textureManager.getSharedTexture(name, deviceIndex);
 	}
 
+	MessageQueue* getMessageQueue(const std::string& name) { return NULL; }
+
 private:
 	TextureManager textureManager;
 };
@@ -53,6 +55,8 @@ public:
 		textures[name] = openGlTexture;
 		return tex;
 	}
+
+	MessageQueue* getMessageQueue(const std::string& name) { return api->getMessageQueue(name); }
 
 private:
 	VisLinkAPI* api;

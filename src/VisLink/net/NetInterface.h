@@ -52,7 +52,10 @@ namespace vislink {
 enum NetMessageType {
 	MSG_none = 0,
 	MSG_createSharedTexture = 1,
-	MSG_getSharedTexture = 2
+	MSG_getSharedTexture = 2,
+	MSG_getMessageQueue = 3,
+	MSG_sendQueueMessage = 4,
+	MSG_receiveQueueMessage = 5
 };
 
 class NetInterface : public VisLinkAPI {

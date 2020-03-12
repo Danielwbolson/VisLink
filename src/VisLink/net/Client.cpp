@@ -197,6 +197,32 @@ Client::~Client()
   std::cout << "close socket" << std::endl;
   close(socketFD);
 #endif
+
+  for (int f = 0; f < messageQueues.size(); f++) {
+    delete messageQueues[f];
+  }
+}
+
+
+ClientMessageQueue::ClientMessageQueue(NetInterface* net, SOCKET socketFD, int id)
+  : net(net), socketFD(socketFD), id(id) {
+}
+int ClientMessageQueue::getId() { return id; }
+void ClientMessageQueue::waitForMessage() {
+  int id = getId();
+  net->sendMessage(socketFD, MSG_receiveQueueMessage, (unsigned char *)&id, sizeof(int));
+  int returnVal;
+  net->receiveData(socketFD, (unsigned char *)&returnVal, sizeof(int));
+}
+void ClientMessageQueue::sendMessage() {
+  int id = getId();
+  net->sendMessage(socketFD, MSG_sendQueueMessage, (unsigned char *)&id, sizeof(int));
+}
+int ClientMessageQueue::sendData(const unsigned char *buf, int len) {
+  return net->sendData(socketFD, buf, len);
+}
+int ClientMessageQueue::receiveData(unsigned char *buf, int len) {
+  return net->receiveData(socketFD, buf, len);
 }
 
 }
