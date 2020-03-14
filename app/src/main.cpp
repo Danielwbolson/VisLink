@@ -162,10 +162,6 @@ void initGL() {
             GLuint internalFormat = GL_RGBA;
             GLuint type = GL_UNSIGNED_BYTE;
 
-            mainImage.addComponent(new Image("app/textures/test.png"));
-            mainImage.update();
-            Image* image = mainImage.getComponent<Image>();
-
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -180,6 +176,11 @@ using namespace std;
 
 
 int main(int argc, char**argv) {
+
+    //mainImage.addComponent(new Image("app/textures/test.png"));
+    mainImage.addComponent(new Image("app/textures/texture.jpg"));
+    mainImage.update();
+    Image* image = mainImage.getComponent<Image>();
 
     cout << "started..." << endl;
     glfwInit();
@@ -209,7 +210,12 @@ int main(int argc, char**argv) {
         if (pid != 0) {
             vislink::Server* server = new vislink::Server();
             api = server;
-            api->createSharedTexture("test.png", vislink::TextureInfo());
+            Image* image = mainImage.getComponent<Image>();
+            vislink::TextureInfo texInfo;
+            texInfo.width = image->getWidth();
+            texInfo.height = image->getHeight();
+            texInfo.components = image->getComponents();
+            api->createSharedTexture("test.png", texInfo);
             while(true) {
                 server->service();
             }

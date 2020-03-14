@@ -107,7 +107,7 @@ TextureManager::~TextureManager() {
 void TextureManager::createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
 
 	Entity* image = new EntityNode(state->getDeviceState(deviceIndex).images);
-        image->addComponent(new Image(256, 256, 4));
+        image->addComponent(new Image(info.width, info.height, info.components));
         image->addComponent(new VulkanExternalImage());
 
 	state->instanceNode.update();
