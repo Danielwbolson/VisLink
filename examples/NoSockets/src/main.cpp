@@ -164,8 +164,6 @@ void initGL() {
             GLuint type = GL_UNSIGNED_BYTE;
 
             glGenTextures(1, &texture);
-            mainImage.addComponent(new Image("app/textures/test.png"));
-            mainImage.update();
             glBindTexture(GL_TEXTURE_2D, texture);
             Image* image = mainImage.getComponent<Image>();
             glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image->getWidth(), image->getHeight(), 0, format, type, image->getData());
@@ -185,12 +183,20 @@ using namespace std;
 
 int main(int argc, char**argv) {
 
+	mainImage.addComponent(new Image("app/textures/test.png"));
+	mainImage.update();
+	Image* image = mainImage.getComponent<Image>();
+
     cout << "started..." << endl;
 
 	initGLFW();
 
 	vislink::VisLinkAPI* api = new vislink::VisLinkAPIImpl();
-    api->createSharedTexture("test.png", vislink::TextureInfo());
+	vislink::TextureInfo texInfo;
+	texInfo.width = image->getWidth();
+	texInfo.height = image->getHeight();
+	texInfo.components = image->getComponents();
+    api->createSharedTexture("test.png", texInfo);
 
 	initGL();
 

@@ -178,7 +178,10 @@ using namespace std;
 int main(int argc, char**argv) {
 
     //mainImage.addComponent(new Image("app/textures/test.png"));
-    mainImage.addComponent(new Image("app/textures/texture.jpg"));
+	mainImage.addComponent(new Image("app/textures/tex512.png"));
+	//mainImage.addComponent(new Image("app/textures/tex512.jpg"));
+	//mainImage.addComponent(new Image("app/textures/texture.jpg"));
+	//mainImage.addComponent(new Image("app/textures/texture.png"));
     mainImage.update();
     Image* image = mainImage.getComponent<Image>();
 
@@ -242,7 +245,7 @@ int main(int argc, char**argv) {
     vislink::Texture tex = api->getSharedTexture("test.png");
     externalTexture = tex.id;
 
-    if (!server) {
+    if (!server &&  argc == 2) {
     	GLuint format = GL_RGBA; 
 	    GLuint internalFormat = GL_RGBA;
 	    GLuint type = GL_UNSIGNED_BYTE;
@@ -258,7 +261,7 @@ int main(int argc, char**argv) {
     int frame = 0;
 
 	while (!glfwWindowShouldClose(window)) { 
-        if (argc == 1) {
+        /*if (argc == 1) {
             startFrame->sendMessage();
             startFrame->sendObject<int>(frame);
             std::cout << frame << std::endl;
@@ -266,7 +269,7 @@ int main(int argc, char**argv) {
         else {
             startFrame->waitForMessage();
             std::cout << startFrame->receiveObject<int>() << std::endl;
-        }
+        }*/
 
 		glfwPollEvents();
 		glfwMakeContextCurrent(window);
@@ -302,12 +305,12 @@ int main(int argc, char**argv) {
 
         frame++;
 
-        if (argc == 1) {
+        /*if (argc == 1) {
             finishFrame->waitForMessage();
         }
         else {
             finishFrame->sendMessage();
-        }
+        }*/
 	}
 
     delete api;
