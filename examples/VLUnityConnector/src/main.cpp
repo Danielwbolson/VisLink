@@ -19,6 +19,7 @@
 #define HEIGHT 512
 
 #include "sandbox/image/Image.h"
+#include<vector>
 
 using namespace sandbox;
 
@@ -33,41 +34,74 @@ using namespace sandbox;
 
 #endif
 
+struct VisLinkContainer {
+	VisLinkContainer() : api(NULL), isReady(false) {}
+	vislink::VisLinkAPI* api;
+	bool isReady;
+};
+
+struct TextureContainer {
+	TextureContainer(int apiId, char* name, int deviceIndex) : name(name), deviceIndex(deviceIndex), apiId(apiId), isReady(false) {}
+	std::string name;
+	int deviceIndex;
+	int apiId;
+	vislink::Texture tex;
+	bool isReady;
+};
+
+std::vector<VisLinkContainer> apis;
+std::vector<TextureContainer> textures;
+
+vislink::VisLinkAPI* getApi(int id) {
+	return apis[id].api;
+}
+
+vislink::Texture& getTexture(int id) {
+	return textures[id].tex;
+}
+
 extern "C"
 {
 	// API methods
-	EXPORT_API void* createClientAPI() {
-		return new vislink::VisLinkOpenGL(new vislink::Client());
+	EXPORT_API int createClientAPI(char* address, int port) {
+		VisLinkContainer client;
+		client.api = new vislink::Client(address, port);
+		apis.push_back(client);
+		return apis.size()-1;
 	}
 
-	EXPORT_API void destroyAPI(void* api) {
-		delete static_cast<vislink::VisLinkAPI*>(api);
+	EXPORT_API bool isAPIReady(int api) {
+		return apis[api].isReady;
 	}
 
-	EXPORT_API void* getSharedTexture(void* api, char* name, int deviceIndex) {
-		vislink::VisLinkAPI* apiImpl = static_cast<vislink::VisLinkAPI*>(api);
+	EXPORT_API void destroyAPI(int id) {
+		//delete getApi(id);
+	}
+
+	EXPORT_API int getSharedTexture(int id, char* name, int deviceIndex) {
+		TextureContainer tex(id, name, deviceIndex);
+		textures.push_back(tex);
+		return textures.size() - 1;
+		/*vislink::VisLinkAPI* apiImpl = static_cast<vislink::VisLinkAPI*>(api);
 		vislink::Texture* tex = new vislink::Texture();
 		*tex = apiImpl->getSharedTexture(name, deviceIndex);
-		return tex;
+		return tex;*/
 	}
 
-	EXPORT_API void releaseTexture(void* tex) {
-		delete static_cast<vislink::Texture*>(tex);
+	EXPORT_API bool isTextureReady(int textureId) {
+		return textures[textureId].isReady;
 	}
 
-	EXPORT_API int getTextureWidth(void* tex) {
-		vislink::Texture* texture = static_cast<vislink::Texture*>(tex);
-		return texture->width;
+	EXPORT_API int getTextureWidth(int textureId) {
+		return getTexture(textureId).width;
 	}
 
-	EXPORT_API int getTextureHeight(void* tex) {
-		vislink::Texture* texture = static_cast<vislink::Texture*>(tex);
-		return texture->height;
+	EXPORT_API int getTextureHeight(int textureId) {
+		return getTexture(textureId).height;
 	}
 
-	EXPORT_API int getTextureId(void* tex) {
-		vislink::Texture* texture = static_cast<vislink::Texture*>(tex);
-		return texture->id;
+	EXPORT_API int getTextureId(int textureId) {
+		return getTexture(textureId).id;
 	}
 }
 
@@ -93,7 +127,7 @@ OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 			/*vislink::Client* client = new vislink::Client();
 			vislink::VisLinkAPI* api = client;
 			api = new vislink::VisLinkOpenGL(api); 
-			tex = api->getSharedTexture("test.png");*/
+			vislink::Texture tex = api->getSharedTexture("test.png");*/
 		}
 
 		break;
@@ -136,13 +170,32 @@ UnityPluginUnload()
 }
 
 // Plugin function to handle a specific rendering event
-static void UNITY_INTERFACE_API OnCreateTextures(int eventID)
+static void UNITY_INTERFACE_API OnCreateTexture(int eventID)
 {
+	TextureContainer& textureContainer = textures[eventID];
+	VisLinkContainer& apiContainer = apis[textureContainer.apiId];
+	textureContainer.tex = apiContainer.api->getSharedTexture(textureContainer.name, textureContainer.deviceIndex);
+	textureContainer.isReady = true;
 }
 
 // Freely defined function to pass a callback to plugin-specific scripts
 extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
-GetCreateTexturesFunc()
+GetCreateTextureFunc()
 {
-	return OnCreateTextures;
+	return OnCreateTexture;
+}
+
+// Plugin function to handle a specific rendering event
+static void UNITY_INTERFACE_API OnCreateAPI(int eventID)
+{
+	VisLinkContainer& apiContainer = apis[eventID];
+	apiContainer.api = new vislink::VisLinkOpenGL(apiContainer.api);
+	apiContainer.isReady = true;
+}
+
+// Freely defined function to pass a callback to plugin-specific scripts
+extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
+GetCreateAPIFunc()
+{
+	return OnCreateAPI;
 }
