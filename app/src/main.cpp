@@ -261,17 +261,34 @@ int main(int argc, char**argv) {
     int frame = 0;
 
 	while (!glfwWindowShouldClose(window)) { 
-        /*if (argc == 1) {
-            startFrame->sendMessage();
-            startFrame->sendObject<int>(frame);
-            std::cout << frame << std::endl;
-        }
-        else {
-            startFrame->waitForMessage();
-            std::cout << startFrame->receiveObject<int>() << std::endl;
-        }*/
+
+		//std::cout << frame << std::endl;
+
+
 
 		glfwPollEvents();
+
+		/*if (argc == 1) {
+			startFrame->sendMessage();
+			startFrame->sendObject<int>(frame);
+			//std::cout << frame << std::endl;
+		}
+		else {
+			startFrame->waitForMessage();
+			//std::cout << startFrame->receiveObject<int>() << std::endl;
+		}
+
+		if (argc == 1) {
+			finishFrame->waitForMessage();
+		}
+		else {
+			finishFrame->sendMessage();
+		}*/
+
+		startFrame->sendMessage();
+		startFrame->sendObject<int>(frame);
+		finishFrame->waitForMessage();
+
 		glfwMakeContextCurrent(window);
         glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -301,16 +318,11 @@ int main(int argc, char**argv) {
         // reset program
         glUseProgram(0);
 
+		frame++;
+
         glfwSwapBuffers(window);
 
-        frame++;
 
-        /*if (argc == 1) {
-            finishFrame->waitForMessage();
-        }
-        else {
-            finishFrame->sendMessage();
-        }*/
 	}
 
     delete api;

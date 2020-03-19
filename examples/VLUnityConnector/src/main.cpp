@@ -103,6 +103,31 @@ extern "C"
 	EXPORT_API int getTextureId(int textureId) {
 		return getTexture(textureId).id;
 	}
+
+	EXPORT_API void* getMessageQueue(int api, char* name) {
+		vislink::MessageQueue* queue = getApi(api)->getMessageQueue(name);
+		return queue;
+	}
+
+	EXPORT_API void waitForMessage(void* msgQueue) {
+		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
+		queue->waitForMessage();
+	}
+
+	EXPORT_API void sendMessage(void* msgQueue) {
+		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
+		queue->sendMessage();
+	}
+
+	EXPORT_API int queueRecieveInt(void* msgQueue) { 
+		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
+		return queue->receiveObject<int>();  
+	}
+
+	EXPORT_API void queueRecieveFloatArray(void* msgQueue, float* arr, int size) {
+		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
+		queue->receiveData((unsigned char*)arr, size * sizeof(float));
+	}
 }
 
 #include "IUnityInterface.h"
