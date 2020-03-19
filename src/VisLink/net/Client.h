@@ -30,13 +30,13 @@ public:
 	~Client();
 
 	virtual void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
-	    sendMessage(socketFD, MSG_createSharedTexture, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
+	    sendMessage(socketFD, MSG_createSharedTexture, (const unsigned char*)name.c_str(), name.size());
 	    sendData(socketFD, (unsigned char*)& deviceIndex, sizeof(int));
 	    sendData(socketFD, (unsigned char*)& info, sizeof(TextureInfo));
 	}
 
 	virtual Texture getSharedTexture(const std::string& name, int deviceIndex) { 
-	    sendMessage(socketFD, MSG_getSharedTexture, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
+	    sendMessage(socketFD, MSG_getSharedTexture, (const unsigned char*)name.c_str(), name.size());
 	    sendData(socketFD, (unsigned char*)& deviceIndex, sizeof(int));
 	    Texture tex;
 #ifdef WIN32
@@ -69,7 +69,7 @@ public:
 	}
 
 	MessageQueue* getMessageQueue(const std::string& name) { 
-		sendMessage(socketFD, MSG_getMessageQueue, (const unsigned char*)name.c_str(), sizeof(name.c_str()));
+		sendMessage(socketFD, MSG_getMessageQueue, (const unsigned char*)name.c_str(), name.size());
 		int queueId;
 		receiveData(socketFD, (unsigned char*)& queueId, sizeof(queueId));
 		MessageQueue* queue = new ClientMessageQueue(this, socketFD, queueId);
