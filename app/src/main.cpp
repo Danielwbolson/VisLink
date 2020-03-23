@@ -261,8 +261,11 @@ int main(int argc, char**argv) {
 	    std::cout << "updating texture " << externalTexture << std::endl;
     }
 
-    vislink::Texture renderTex = api->getSharedTexture("render");
-    externalTexture = renderTex.id;
+    if (argc == 3) {
+        vislink::Texture renderTex = api->getSharedTexture("render");
+        externalTexture = renderTex.id;
+    }
+
 
     int frame = 0;
     double lastTime = glfwGetTime();
@@ -275,12 +278,12 @@ int main(int argc, char**argv) {
 
 		glfwPollEvents();
 
-        
+
         if (frame % 100 == 0) {
             //std::cout << 
             double newTime = glfwGetTime();
             float fps = 100.0f / (newTime - lastTime);
-            std::cout << fps << std::endl;
+            //std::cout << fps << std::endl;
             lastTime = newTime;
         }
 
@@ -323,8 +326,10 @@ int main(int argc, char**argv) {
 		/*startFrame->sendMessage();
 		startFrame->sendObject<int>(frame);
 		finishFrame->waitForMessage();*/
-        filterStart->sendMessage();
-        filterEnd->waitForMessage();
+        if (argc == 3) {
+            filterStart->sendMessage();
+            filterEnd->waitForMessage();
+        }
 
 		glfwMakeContextCurrent(window);
         glClearColor(1,1,1,1);
