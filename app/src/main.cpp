@@ -328,7 +328,7 @@ int main(int argc, char**argv) {
 		finishFrame->waitForMessage();*/
         if (argc == 3) {
             filterStart->sendMessage();
-            filterEnd->waitForMessage();
+            filterEnd->waitForMessage(); 
         }
 
 		glfwMakeContextCurrent(window);

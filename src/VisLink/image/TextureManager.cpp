@@ -8,6 +8,7 @@
 #include "sandbox/graphics/vulkan/render/VulkanCommandPool.h"
 #include "sandbox/graphics/vulkan/image/VulkanExternalImage.h"
 #include "sandbox/graphics/vulkan/image/VulkanImportImage.h"
+#include "sandbox/graphics/vulkan/sync/VulkanSemaphore.h"
 #include "sandbox/image/Image.h"
 
 #ifdef WIN32
@@ -109,6 +110,10 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 	Entity* image = new EntityNode(state->getDeviceState(deviceIndex).images);
         image->addComponent(new Image(info.width, info.height, info.components));
         image->addComponent(new VulkanExternalImage());
+        image->addComponent(new VulkanSemaphore(true));
+        image->addComponent(new VulkanSemaphore(true));
+        image->addComponent(new VulkanSemaphore(true));
+        image->addComponent(new VulkanSemaphore(true));
 
 	state->instanceNode.update();
 	state->getDeviceState(deviceIndex).renderer->render(VULKAN_RENDER_UPDATE_SHARED);
@@ -125,6 +130,13 @@ Texture TextureManager::getSharedTexture(const std::string& name, int deviceInde
 	tex.components = image->getComponents();
 	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->getDeviceState(deviceIndex).renderer->getContext());
 	tex.deviceIndex = deviceIndex;
+
+	std::vector<VulkanSemaphore*> semaphores = imageNode->getComponents<VulkanSemaphore>();
+	for (int f = 0; f < semaphores.size(); f++) {
+		tex.externalSemaphores[f] = semaphores[f]->getExternalHandle();
+		std::cout << tex.externalSemaphores[f] << " " << semaphores[f]->getExternalHandle() << std::endl;
+	}
+
 	return tex;
 }
 

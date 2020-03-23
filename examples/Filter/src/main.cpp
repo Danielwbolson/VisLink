@@ -243,6 +243,7 @@ int main(int argc, char**argv) {
         //std::cout << "Waiting" << std::endl;
         filterStart->waitForMessage();
 
+        // semaphore wait for texture write avail
 
         glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -255,7 +256,8 @@ int main(int argc, char**argv) {
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
-        glFinish();
+        // semaphore signal texture shader read
+        //glFinish();
 
         filterEnd->sendMessage();
 
