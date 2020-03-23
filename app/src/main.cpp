@@ -219,6 +219,7 @@ int main(int argc, char**argv) {
             texInfo.height = image->getHeight();
             texInfo.components = image->getComponents();
             api->createSharedTexture("test.png", texInfo);
+            api->createSharedTexture("render", texInfo);
             while(true) {
                 server->service();
             }
@@ -234,6 +235,8 @@ int main(int argc, char**argv) {
     
     vislink::MessageQueue* startFrame =  api->getMessageQueue("start");
     vislink::MessageQueue* finishFrame =  api->getMessageQueue("finish");
+    vislink::MessageQueue* filterStart =  api->getMessageQueue("filterStart");
+    vislink::MessageQueue* filterEnd =  api->getMessageQueue("filterEnd");
 
     
     initGLFW();
@@ -258,7 +261,11 @@ int main(int argc, char**argv) {
 	    std::cout << "updating texture " << externalTexture << std::endl;
     }
 
+    vislink::Texture renderTex = api->getSharedTexture("render");
+    externalTexture = renderTex.id;
+
     int frame = 0;
+    double lastTime = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window)) { 
 
@@ -267,6 +274,34 @@ int main(int argc, char**argv) {
 
 
 		glfwPollEvents();
+
+        
+        if (frame % 100 == 0) {
+            //std::cout << 
+            double newTime = glfwGetTime();
+            float fps = 100.0f / (newTime - lastTime);
+            std::cout << fps << std::endl;
+            lastTime = newTime;
+        }
+
+        /*if (!server &&  argc == 2) {
+            GLuint format = GL_RGBA; 
+            GLuint internalFormat = GL_RGBA;
+            GLuint type = GL_UNSIGNED_BYTE;
+
+            Image* image = mainImage.getComponent<Image>();
+
+            unsigned char* newImage = new unsigned char[image->getWidth()*image->getHeight()*image->getComponents()];
+            std::copy(image->getData(), image->getData()+image->getWidth()*image->getHeight()*image->getComponents(), newImage);
+            for (int f = 0; f < image->getWidth()*image->getHeight()*image->getComponents(); f++) {
+                newImage[f] *= 1.0f*(frame%256)/256.0;
+            }
+
+            glBindTexture(GL_TEXTURE_2D, externalTexture);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->getWidth(), image->getHeight(), internalFormat, type, newImage);
+
+            delete[] newImage;
+        }*/
 
 		/*if (argc == 1) {
 			startFrame->sendMessage();
@@ -285,9 +320,11 @@ int main(int argc, char**argv) {
 			finishFrame->sendMessage();
 		}*/
 
-		startFrame->sendMessage();
+		/*startFrame->sendMessage();
 		startFrame->sendObject<int>(frame);
-		finishFrame->waitForMessage();
+		finishFrame->waitForMessage();*/
+        filterStart->sendMessage();
+        filterEnd->waitForMessage();
 
 		glfwMakeContextCurrent(window);
         glClearColor(1,1,1,1);
