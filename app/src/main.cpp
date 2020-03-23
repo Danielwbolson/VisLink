@@ -261,8 +261,9 @@ int main(int argc, char**argv) {
 	    std::cout << "updating texture " << externalTexture << std::endl;
     }
 
+    vislink::Texture renderTex;
     if (argc == 3) {
-        vislink::Texture renderTex = api->getSharedTexture("render");
+        renderTex = api->getSharedTexture("render");
         externalTexture = renderTex.id;
     }
 
@@ -327,8 +328,11 @@ int main(int argc, char**argv) {
 		startFrame->sendObject<int>(frame);
 		finishFrame->waitForMessage();*/
         if (argc == 3) {
+            renderTex.signalWrite();
             filterStart->sendMessage();
+
             filterEnd->waitForMessage(); 
+            renderTex.waitForRead();
         }
 
 		glfwMakeContextCurrent(window);

@@ -62,8 +62,17 @@ public:
 		//tex.externalHandle = 0;
 #else
 		int fd = NetInterface::recvfd(socketFD);
+		int semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
+		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+			std::cout << "sdf " << f << std::endl;
+			semaphoreFDs[f] = NetInterface::recvfd(socketFD);
+		}
 		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
 		tex.externalHandle = fd;
+		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+			tex.externalSemaphores[f] = semaphoreFDs[f];
+			std::cout << "copied " << tex.externalSemaphores[f] << std::endl;
+		}
 #endif
 		return tex;
 	}

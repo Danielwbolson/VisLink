@@ -51,7 +51,7 @@ public:
 		std::cout << "getSharedTexture" << std::endl;
 		Texture tex = api->getSharedTexture(name, deviceIndex);
 		OpenGLTexture* openGlTexture = createOpenGLTexture(tex, procLoader);
-		tex.id = openGlTexture->getId();
+		tex = openGlTexture->getTexture();
 		textures[name] = openGlTexture;
 		return tex;
 	}

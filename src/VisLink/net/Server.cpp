@@ -312,8 +312,12 @@ void Server::service() {
 				tex.externalHandle = externalHandleDup;*/
 #else
                 NetInterface::sendfd(sd, tex.externalHandle);
+                for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+                    NetInterface::sendfd(sd, tex.externalSemaphores[f]);
+                }
 #endif
                 sendData(sd, (unsigned char*)&tex, sizeof(tex));
+
 				//int texId = 0;
 				//receiveData(sd, (unsigned char*)& texId, sizeof(int));
 				//std::cout << "tex id: " << texId << std::endl;

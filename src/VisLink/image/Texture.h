@@ -31,17 +31,19 @@ public:
 	virtual void waitForRead(Texture& texture) = 0;
 };
 
+#define NUM_TEXTURE_SEMAPHORES 2
+
 struct Texture : TextureInfo { 
 	Texture() : syncImpl(NULL) {}
 #ifdef WIN32
 	HANDLE externalHandle;
-	HANDLE externalSemaphores[4];
+	HANDLE externalSemaphores[NUM_TEXTURE_SEMAPHORES];
 #else
 	unsigned int externalHandle;
-	unsigned int externalSemaphores[4];
+	unsigned int externalSemaphores[NUM_TEXTURE_SEMAPHORES];
 #endif
 	unsigned int id;
-	unsigned int semaphores[4];
+	unsigned int semaphores[NUM_TEXTURE_SEMAPHORES];
 	int deviceIndex;
 	
 	void signalWrite() { if(syncImpl) {syncImpl->signalWrite(*this);} }

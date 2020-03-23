@@ -39,7 +39,10 @@ PFNGLTEXTURESTORAGEMEM2DEXTPROC pfnTextureStorageMem2DEXT;
 PFNGLDELETEMEMORYOBJECTSEXTPROC pfnDeleteMemoryObjectsEXT;
 #define glCreateTextures pfnCreateTextures
 PFNGLCREATETEXTURESPROC pfnCreateTextures;
-
+#define glGenSemaphoresEXT pfnGenSemaphoresEXT
+PFNGLGENSEMAPHORESEXTPROC pfnGenSemaphoresEXT;
+#define glImportSemaphoreFdEXT pfnImportSemaphoreFdEXT
+PFNGLIMPORTSEMAPHOREFDEXTPROC pfnImportSemaphoreFdEXT;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
@@ -81,6 +84,8 @@ void textureInitExtensions() {
 			get_proc("glDeleteMemoryObjectsEXT");
 		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
 			get_proc("glCreateTextures");
+		pfnGenSemaphoresEXT = (PFNGLGENSEMAPHORESEXTPROC)
+			get_proc("glGenSemaphoresEXT");
 	    initialized = true;
 	    close_libgl();
 		std::cout << "wgl get proc" << std::endl;
@@ -114,11 +119,16 @@ void textureInitExtensions(ProcLoader* procLoader) {
 			procLoader->getProc("glDeleteMemoryObjectsEXT");
 		pfnCreateTextures = (PFNGLCREATETEXTURESPROC)
 			procLoader->getProc("glCreateTextures");
+		pfnGenSemaphoresEXT = (PFNGLGENSEMAPHORESEXTPROC)
+			procLoader->getProc("glGenSemaphoresEXT");
+		pfnImportSemaphoreFdEXT = (PFNGLIMPORTSEMAPHOREFDEXTPROC)
+			procLoader->getProc("glImportSemaphoreFdEXT");
 	    initialized = true;
 	}
 }
 
 #endif
+
 
 class OpenGLTextureImpl : public OpenGLTexture {
 public:
@@ -132,6 +142,32 @@ public:
 	GLuint id;
 	GLuint mem;
 	Texture texture;
+};
+
+class OpenGLTextureSync : public TextureSync {
+public:
+	static TextureSync* getInstance() {
+		static OpenGLTextureSync sync;
+		return &sync;
+	}
+
+	void signalWrite(Texture& texture) { 
+		GLenum dstLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
+        glSignalSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &dstLayout);
+		//std::cout << "signalWrite2" << std::endl; 
+	}
+	void waitForWrite(Texture& texture) {
+		GLenum srcLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
+        glWaitSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &srcLayout);
+	}
+	void signalRead(Texture& texture) {
+		GLenum dstLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
+        glSignalSemaphoreEXT(texture.semaphores[1], 0, nullptr, 1, &texture.id, &dstLayout);
+	}
+	void waitForRead(Texture& texture) {
+		GLenum srcLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
+        glWaitSemaphoreEXT(texture.semaphores[1], 0, nullptr, 1, &texture.id, &srcLayout);
+	}
 };
 
 OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
@@ -161,6 +197,32 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
     OpenGLTextureImpl* texture = new OpenGLTextureImpl(tex);
     texture->mem = mem;
     texture->id = externalTexture;
+    texture->texture.id = externalTexture;
+    texture->texture.syncImpl = OpenGLTextureSync::getInstance();
+
+#ifdef WIN32
+    HANDLE semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
+	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+		semaphoreFDs[f] = tex.externalSemaphores[f];
+	}
+#else
+    int semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
+	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+		semaphoreFDs[f] = dup(tex.externalSemaphores[f]);
+	}
+#endif
+
+	glGenSemaphoresEXT(NUM_TEXTURE_SEMAPHORES, texture->texture.semaphores);
+
+	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+#ifdef WIN32
+		glImportSemaphoreWin32HandleEXT(texture->texture.semaphores[f], GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, semaphoreFDs[f]);
+#else
+ 		glImportSemaphoreFdEXT(texture->texture.semaphores[f], GL_HANDLE_TYPE_OPAQUE_FD_EXT, semaphoreFDs[f]);
+#endif
+	}
+
+
 	return texture;
 }
 
