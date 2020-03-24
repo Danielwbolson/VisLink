@@ -218,8 +218,10 @@ int main(int argc, char**argv) {
             texInfo.width = image->getWidth();
             texInfo.height = image->getHeight();
             texInfo.components = image->getComponents();
+            std::cout << "Create test.png" << std::endl;
             api->createSharedTexture("test.png", texInfo);
-            api->createSharedTexture("render", texInfo);
+            std::cout << "Create render" << std::endl;
+            api->createSharedTexture("render", texInfo); 
             while(true) {
                 server->service();
             }

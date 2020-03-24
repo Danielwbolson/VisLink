@@ -45,8 +45,9 @@ public:
 		int pid = GetCurrentProcessId();
 		receiveData(socketFD, (unsigned char*)& pid, sizeof(int));
 		std::cout << "Pid client: " << pid << std::endl;
-		HANDLE serverProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
+        receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
 
+        HANDLE serverProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
 		tex.externalHandle = getExternalHandle(serverProcess, tex.externalHandle);
 		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
 			tex.externalSemaphores[f] = getExternalHandle(serverProcess, tex.externalSemaphores[f]);
@@ -70,8 +71,7 @@ public:
 #ifdef WIN32
 	HANDLE getExternalHandle(HANDLE serverProcess, HANDLE externalHandle) {
 		HANDLE externalHandleDup;
-		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
-		std::cout << externalHandle << " eh" << std::endl;
+		std::cout << externalHandle << " eh1" << std::endl;
 		DuplicateHandle(serverProcess,
 			externalHandle,
 			GetCurrentProcess(),
@@ -79,7 +79,7 @@ public:
 			0,
 			FALSE,
 			DUPLICATE_SAME_ACCESS);
-		std::cout << externalHandleDup << " eh" << std::endl;
+		std::cout << externalHandleDup << " eh2" << std::endl;
 		return externalHandleDup;
 	}
 #endif

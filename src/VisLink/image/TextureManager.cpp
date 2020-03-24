@@ -118,6 +118,12 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 	state->getDeviceState(deviceIndex).renderer->render(VULKAN_RENDER_UPDATE_SHARED);
     state->getDeviceState(deviceIndex).imageMap[name] = image;
 	//externalHandle = 
+
+    std::vector<VulkanSemaphore*> semaphores = image->getComponents<VulkanSemaphore>();
+    for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+        //tex.externalSemaphores[f] = semaphores[f]->getExternalHandle(); 
+        std::cout << "" << " " << semaphores[f]->getExternalHandle() << std::endl;
+    }
 }
 
 Texture TextureManager::getSharedTexture(const std::string& name, int deviceIndex) {
