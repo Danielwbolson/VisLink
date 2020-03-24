@@ -46,36 +46,43 @@ public:
 		receiveData(socketFD, (unsigned char*)& pid, sizeof(int));
 		std::cout << "Pid client: " << pid << std::endl;
 		HANDLE serverProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
-		
-		HANDLE externalHandleDup;
-		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
-		std::cout << tex.externalHandle << " eh" << std::endl;
-		DuplicateHandle(serverProcess,
-			tex.externalHandle,
-			GetCurrentProcess(),
-			&externalHandleDup,
-			0,
-			FALSE,
-			DUPLICATE_SAME_ACCESS);
-		tex.externalHandle = externalHandleDup;
-		std::cout << tex.externalHandle << " eh" << std::endl;
+
+		tex.externalHandle = getExternalHandle(serverProcess, tex.externalHandle);
+		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
+			tex.externalSemaphores[f] = getExternalHandle(serverProcess, tex.externalSemaphores[f]);
+		}
 		//tex.externalHandle = 0;
 #else
 		int fd = NetInterface::recvfd(socketFD);
 		int semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
 		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-			std::cout << "sdf " << f << std::endl;
 			semaphoreFDs[f] = NetInterface::recvfd(socketFD);
 		}
 		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
 		tex.externalHandle = fd;
 		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
 			tex.externalSemaphores[f] = semaphoreFDs[f];
-			std::cout << "copied " << tex.externalSemaphores[f] << std::endl;
 		}
 #endif
 		return tex;
 	}
+
+#ifdef WIN32
+	HANDLE getExternalHandle(HANDLE serverProcess, HANDLE externalHandle) {
+		HANDLE externalHandleDup;
+		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
+		std::cout << externalHandle << " eh" << std::endl;
+		DuplicateHandle(serverProcess,
+			externalHandle,
+			GetCurrentProcess(),
+			&externalHandleDup,
+			0,
+			FALSE,
+			DUPLICATE_SAME_ACCESS);
+		std::cout << externalHandleDup << " eh" << std::endl;
+		return externalHandleDup;
+	}
+#endif
 
 	MessageQueue* getMessageQueue(const std::string& name) { 
 		sendMessage(socketFD, MSG_getMessageQueue, (const unsigned char*)name.c_str(), name.size());

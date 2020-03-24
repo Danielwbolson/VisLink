@@ -28,9 +28,13 @@ PFNGLCREATEMEMORYOBJECTSEXTPROC pfnCreateMemoryObjectsEXT;
 #ifdef WIN32
 #define glImportMemoryWin32HandleEXT pfnImportMemoryWin32HandleEXT
 PFNGLIMPORTMEMORYWIN32HANDLEEXTPROC pfnImportMemoryWin32HandleEXT;
+#define glImportSemaphoreWin32HandleEXT pfnImportSemaphoreWin32HandleEXT
+PFNGLIMPORTSEMAPHOREWIN32HANDLEEXTPROC pfnImportSemaphoreWin32HandleEXT;
 #else
 #define glImportMemoryFdEXT pfnImportMemoryFdEXT
 PFNGLIMPORTMEMORYFDEXTPROC pfnImportMemoryFdEXT;
+#define glImportSemaphoreFdEXT pfnImportSemaphoreFdEXT
+PFNGLIMPORTSEMAPHOREFDEXTPROC pfnImportSemaphoreFdEXT;
 #endif
 
 #define glTextureStorageMem2DEXT pfnTextureStorageMem2DEXT
@@ -41,8 +45,6 @@ PFNGLDELETEMEMORYOBJECTSEXTPROC pfnDeleteMemoryObjectsEXT;
 PFNGLCREATETEXTURESPROC pfnCreateTextures;
 #define glGenSemaphoresEXT pfnGenSemaphoresEXT
 PFNGLGENSEMAPHORESEXTPROC pfnGenSemaphoresEXT;
-#define glImportSemaphoreFdEXT pfnImportSemaphoreFdEXT
-PFNGLIMPORTSEMAPHOREFDEXTPROC pfnImportSemaphoreFdEXT;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
@@ -86,6 +88,8 @@ void textureInitExtensions() {
 			get_proc("glCreateTextures");
 		pfnGenSemaphoresEXT = (PFNGLGENSEMAPHORESEXTPROC)
 			get_proc("glGenSemaphoresEXT");
+		pfnImportSemaphoreWin32HandleEXT = (PFNGLIMPORTSEMAPHOREWIN32HANDLEEXTPROC)
+			procLoader->getProc("glImportSemaphoreWin32HandleEXT");
 	    initialized = true;
 	    close_libgl();
 		std::cout << "wgl get proc" << std::endl;
