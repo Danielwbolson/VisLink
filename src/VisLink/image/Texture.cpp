@@ -45,6 +45,10 @@ PFNGLDELETEMEMORYOBJECTSEXTPROC pfnDeleteMemoryObjectsEXT;
 PFNGLCREATETEXTURESPROC pfnCreateTextures;
 #define glGenSemaphoresEXT pfnGenSemaphoresEXT
 PFNGLGENSEMAPHORESEXTPROC pfnGenSemaphoresEXT;
+#define glSignalSemaphoreEXT pfnSignalSemaphoreEXT
+PFNGLSIGNALSEMAPHOREEXTPROC pfnSignalSemaphoreEXT;
+#define glWaitSemaphoreEXT pfnWaitSemaphoreEXT
+PFNGLWAITSEMAPHOREEXTPROC pfnWaitSemaphoreEXT;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
@@ -127,6 +131,11 @@ void textureInitExtensions(ProcLoader* procLoader) {
 			procLoader->getProc("glGenSemaphoresEXT");
 		pfnImportSemaphoreFdEXT = (PFNGLIMPORTSEMAPHOREFDEXTPROC)
 			procLoader->getProc("glImportSemaphoreFdEXT");
+		pfnSignalSemaphoreEXT = (PFNGLSIGNALSEMAPHOREEXTPROC)
+			procLoader->getProc("glSignalSemaphoreEXT");
+		pfnWaitSemaphoreEXT = (PFNGLWAITSEMAPHOREEXTPROC)
+			procLoader->getProc("glWaitSemaphoreEXT");
+
 	    initialized = true;
 	}
 }
@@ -197,7 +206,7 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
 #endif
 	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 
-    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, tex.width, tex.height, mem, 0 );
+    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA16F, tex.width, tex.height, mem, 0 );
     OpenGLTextureImpl* texture = new OpenGLTextureImpl(tex);
     texture->mem = mem;
     texture->id = externalTexture;
