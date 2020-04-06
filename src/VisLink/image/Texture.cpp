@@ -1,5 +1,6 @@
 #include "VisLink/image/Texture.h"
 #include "VisLink/sync/Semaphore.h"
+#include "VisLink/sync/SyncStrategy.h"
 
 #include "OpenGL.h"
 #include <GLFW/glfw3.h>
@@ -304,5 +305,32 @@ void OpenGLSync::write(const Texture& tex) {
 void OpenGLSync::read(const Texture& tex) {
 	addTexture(tex.id, GL_LAYOUT_SHADER_READ_ONLY_EXT);
 }
+
+
+void OpenGLSemaphoreSync::signal() {
+	if (!hasSemaphore) { std::cout << " no semaphore " << std::endl; exit(0); }
+	glSignalSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
+	glFlush();
+}
+
+void OpenGLSemaphoreSync::waitForSignal() {
+	if (!hasSemaphore) { std::cout << " no semaphore " << std::endl; exit(0); }
+	glWaitSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
+	glFlush();
+}
+
+void OpenGLSemaphoreSync::addTexture(unsigned int id, unsigned int layout) {
+	textures.push_back(id);
+	layouts.push_back(layout);
+}
+
+void OpenGLSemaphoreSync::write(const Texture& tex) {
+	addTexture(tex.id, GL_LAYOUT_COLOR_ATTACHMENT_EXT);
+}
+
+void OpenGLSemaphoreSync::read(const Texture& tex) {
+	addTexture(tex.id, GL_LAYOUT_SHADER_READ_ONLY_EXT);
+}
+
 
 }
