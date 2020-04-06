@@ -283,11 +283,13 @@ OpenGLSemaphore* createOpenGLSemaphore(const Semaphore& semaphore, ProcLoader* p
 
 void OpenGLSync::signal(const Semaphore& semaphore) {
 	glSignalSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
+	glFlush();
 }
 
 
 void OpenGLSync::waitForSignal(const Semaphore& semaphore) {
 	glWaitSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
+	glFlush();
 }
 
 void OpenGLSync::addTexture(unsigned int id, unsigned int layout) {
