@@ -349,6 +349,24 @@ void Server::service() {
             else if (messageType == MSG_receiveQueueData) {
                 ServerMessageQueue* queue = getQueueFromMessage(sd);
             }
+            else if (messageType == MSG_getSemaphore) {
+                unsigned char* buf = new unsigned char[dataLength+1];
+                receiveData(sd, buf, dataLength);
+                int deviceIndex;
+                receiveData(sd, (unsigned char*)& deviceIndex, sizeof(int));
+                buf[dataLength] = '\0';
+                std::string val(reinterpret_cast<char*>(buf));
+                Semaphore sem = getSemaphore(val, deviceIndex);
+#ifdef WIN32
+                int pid = GetCurrentProcessId();
+                sendData(sd, (unsigned char*)& pid, sizeof(int));
+#else
+                NetInterface::sendfd(sd, sem.externalHandle);
+#endif
+                sendData(sd, (unsigned char*)&sem, sizeof(sem));
+                delete[] buf;
+
+            }
         }
 
     }

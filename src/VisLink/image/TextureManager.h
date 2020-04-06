@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include "VisLink/image/Texture.h"
+#include "VisLink/sync/Semaphore.h"
 
 namespace vislink {
 
@@ -16,6 +17,7 @@ public:
 
 	void createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex);
 	Texture getSharedTexture(const std::string& name, int deviceIndex);
+	Semaphore getSemaphore(const std::string& name, int deviceIndex);
 
 private:
     TextureManagerState* state;

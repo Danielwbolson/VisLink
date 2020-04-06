@@ -63,7 +63,6 @@ public:
 
 OpenGLTexture* createOpenGLTexture(const Texture& texture, ProcLoader* procLoader = NULL);
 
-
 }
 
 

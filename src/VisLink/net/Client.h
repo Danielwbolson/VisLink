@@ -93,6 +93,26 @@ public:
 		return queue;
 	}
 
+	virtual Semaphore getSemaphore(const std::string& name, int deviceIndex) { 
+	    sendMessage(socketFD, MSG_getSemaphore, (const unsigned char*)name.c_str(), name.size());
+	    sendData(socketFD, (unsigned char*)& deviceIndex, sizeof(int));
+	    Semaphore sem;
+#ifdef WIN32
+		int pid = GetCurrentProcessId();
+		receiveData(socketFD, (unsigned char*)& pid, sizeof(int));
+        receiveData(socketFD, (unsigned char*)& sem, sizeof(sem));
+
+        HANDLE serverProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
+		sem.externalHandle = getExternalHandle(serverProcess, sem.externalHandle);
+#else
+		int fd = NetInterface::recvfd(socketFD);
+		int semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
+		receiveData(socketFD, (unsigned char*)& sem, sizeof(sem));
+		sem.externalHandle = fd;
+#endif
+		return sem;
+	}
+
 private:
 	std::vector<MessageQueue*> messageQueues;
 	SOCKET socketFD;

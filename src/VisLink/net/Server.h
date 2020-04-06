@@ -64,6 +64,8 @@ public:
 		return NULL;
 	}
 
+	Semaphore getSemaphore(const std::string& name, int deviceIndex) { return impl.getSemaphore(name, deviceIndex); }
+
 	void service();
 
 private:

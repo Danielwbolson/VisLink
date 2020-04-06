@@ -1,4 +1,5 @@
 #include "VisLink/image/Texture.h"
+#include "VisLink/sync/Semaphore.h"
 
 #include "OpenGL.h"
 #include <GLFW/glfw3.h>
@@ -211,7 +212,9 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
     texture->mem = mem;
     texture->id = externalTexture;
     texture->texture.id = externalTexture;
-    texture->texture.syncImpl = OpenGLTextureSync::getInstance();
+    if (false) {
+    	texture->texture.syncImpl = OpenGLTextureSync::getInstance();
+    }
 
 #ifdef WIN32
     HANDLE semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
@@ -237,6 +240,67 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
 
 
 	return texture;
+}
+
+class OpenGLSemaphoreImpl : public OpenGLSemaphore {
+public:
+	OpenGLSemaphoreImpl(const Semaphore& semaphore) : semaphore(semaphore) {}
+	~OpenGLSemaphoreImpl() {
+		//glDeleteTextures(1, &id);
+		//glDeleteMemoryObjectsEXT(1, &mem);
+	}
+	virtual unsigned int getId() const { return id; }
+	virtual const Semaphore& getSemaphore() const { return semaphore; }
+	GLuint id;
+	Semaphore semaphore;
+};
+
+
+OpenGLSemaphore* createOpenGLSemaphore(const Semaphore& semaphore, ProcLoader* procLoader) {
+#ifdef WIN32
+	textureInitExtensions();
+	HANDLE newHandle = semaphore.externalHandle;
+#else
+	textureInitExtensions(procLoader);
+	int newHandle = semaphore.externalHandle;
+	newHandle = dup(newHandle);
+#endif
+
+	OpenGLSemaphoreImpl* sem = new OpenGLSemaphoreImpl(semaphore);
+
+    GLuint externalSemaphore = 0;
+	glGenSemaphoresEXT(1, &externalSemaphore);
+#ifdef WIN32
+	glImportSemaphoreWin32HandleEXT(externalSemaphore, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, newHandle);
+#else
+ 	glImportSemaphoreFdEXT(externalSemaphore, GL_HANDLE_TYPE_OPAQUE_FD_EXT, newHandle);
+#endif
+
+ 	sem->id = externalSemaphore;
+ 	sem->semaphore.id = externalSemaphore;
+	return sem;
+}
+
+void OpenGLSync::signal(const Semaphore& semaphore) {
+	glSignalSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
+}
+
+
+void OpenGLSync::waitForSignal(const Semaphore& semaphore) {
+	glWaitSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
+}
+
+void OpenGLSync::addTexture(unsigned int id, unsigned int layout) {
+	textures.push_back(id);
+	layouts.push_back(layout);
+}
+
+void OpenGLSync::write(const Texture& tex) {
+	addTexture(tex.id, GL_LAYOUT_COLOR_ATTACHMENT_EXT);
+}
+
+void OpenGLSync::read(const Texture& tex) {
+	addTexture(tex.id, GL_LAYOUT_SHADER_READ_ONLY_EXT);
 }
 
 }

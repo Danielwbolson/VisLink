@@ -46,13 +46,16 @@ struct TextureManagerDeviceState {
 				renderer = new VulkanDeviceRenderer();
 				updateNode->addComponent(renderer);
 				updateNode->addComponent(new RenderNode(graphicsObjects));
+			semaphores = new EntityNode(deviceNode);
 	}
 
 	Entity* deviceNode;
 	Entity* graphicsObjects;
 	VulkanDeviceRenderer* renderer;
 	Entity* images;
+	Entity* semaphores;
 	std::map<std::string, Entity*> imageMap;
+	std::map<std::string, Entity*> semaphoreMap;
 };
 
 class TextureManagerState {
@@ -143,6 +146,26 @@ Texture TextureManager::getSharedTexture(const std::string& name, int deviceInde
 	}
 
 	return tex;
+}
+
+Semaphore TextureManager::getSemaphore(const std::string& name, int deviceIndex) {
+	std::map<std::string, Entity*>::iterator it = state->getDeviceState(deviceIndex).semaphoreMap.find(name);
+	Entity* semaphoreNode = NULL;
+	if (it != state->getDeviceState(deviceIndex).semaphoreMap.end()) {
+		semaphoreNode = it->second;
+	}
+	else {
+		semaphoreNode = new EntityNode(state->getDeviceState(deviceIndex).semaphores);
+        	semaphoreNode->addComponent(new VulkanSemaphore(true));
+        	
+		state->instanceNode.update();
+		state->getDeviceState(deviceIndex).semaphoreMap[name] = semaphoreNode;
+	}
+
+	Semaphore semaphore;
+	semaphore.externalHandle = semaphoreNode->getComponent<VulkanSemaphore>()->getExternalHandle();
+	semaphore.deviceIndex = deviceIndex;
+	return semaphore;
 }
 
 }

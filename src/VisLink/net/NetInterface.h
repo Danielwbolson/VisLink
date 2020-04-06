@@ -57,7 +57,8 @@ enum NetMessageType {
 	MSG_sendQueueMessage = 4,
 	MSG_receiveQueueMessage = 5,
 	MSG_sendQueueData = 6,
-	MSG_receiveQueueData = 7
+	MSG_receiveQueueData = 7,
+	MSG_getSemaphore = 8
 };
 
 class NetInterface : public VisLinkAPI {

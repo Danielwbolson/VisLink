@@ -20,6 +20,10 @@ public:
 
 	MessageQueue* getMessageQueue(const std::string& name) { return NULL; }
 
+	Semaphore getSemaphore(const std::string& name, int deviceIndex) {
+		return textureManager.getSemaphore(name, deviceIndex);
+	}
+
 private:
 	TextureManager textureManager;
 };
@@ -31,6 +35,10 @@ public:
 	~VisLinkOpenGL() {
 		for (std::map<std::string, OpenGLTexture*>::iterator it = textures.begin(); it != textures.end(); it++) {
 			delete it->second;
+		}
+
+		for (std::map<std::string, OpenGLSemaphore*>::iterator semIt = semaphores.begin(); semIt != semaphores.end(); semIt++) {
+			delete semIt->second;
 		}
 		
 		if (deleteApi) {
@@ -47,7 +55,7 @@ public:
 		api->createSharedTexture(name, info, deviceIndex);
 	}
 
-	virtual Texture getSharedTexture(const std::string& name, int deviceIndex) {
+	Texture getSharedTexture(const std::string& name, int deviceIndex) {
 		std::cout << "getSharedTexture" << std::endl;
 		Texture tex = api->getSharedTexture(name, deviceIndex);
 		OpenGLTexture* openGlTexture = createOpenGLTexture(tex, procLoader);
@@ -58,10 +66,19 @@ public:
 
 	MessageQueue* getMessageQueue(const std::string& name) { return api->getMessageQueue(name); }
 
+	Semaphore getSemaphore(const std::string& name, int deviceIndex) {
+		Semaphore sem = api->getSemaphore(name, deviceIndex);
+		OpenGLSemaphore* openGlSemaphore = createOpenGLSemaphore(sem, procLoader);
+		sem = openGlSemaphore->getSemaphore();
+		semaphores[name] = openGlSemaphore;
+		return sem;
+	}
+
 private:
 	VisLinkAPI* api;
 	bool deleteApi;
 	std::map<std::string, OpenGLTexture*> textures;
+	std::map<std::string, OpenGLSemaphore*> semaphores;
 	ProcLoader* procLoader;
 };
 
