@@ -5,6 +5,7 @@
 #include <typeinfo>
 #include "VisLink/sync/Semaphore.h"
 #include "VisLink/queue/MessageQueue.h"
+#include <string>
 
 namespace vislink {
 
