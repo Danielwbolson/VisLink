@@ -208,7 +208,7 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
 #endif
 	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 
-    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA16F, tex.width, tex.height, mem, 0 );
+    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, tex.width, tex.height, mem, 0 );
     OpenGLTextureImpl* texture = new OpenGLTextureImpl(tex);
     texture->mem = mem;
     texture->id = externalTexture;
