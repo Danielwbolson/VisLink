@@ -96,6 +96,10 @@ void textureInitExtensions() {
 			get_proc("glGenSemaphoresEXT");
 		pfnImportSemaphoreWin32HandleEXT = (PFNGLIMPORTSEMAPHOREWIN32HANDLEEXTPROC)
             get_proc("glImportSemaphoreWin32HandleEXT");
+		pfnSignalSemaphoreEXT = (PFNGLSIGNALSEMAPHOREEXTPROC)
+			get_proc("glSignalSemaphoreEXT");
+		pfnWaitSemaphoreEXT = (PFNGLWAITSEMAPHOREEXTPROC)
+			get_proc("glWaitSemaphoreEXT");
 	    initialized = true;
 	    close_libgl();
 		std::cout << "wgl get proc" << std::endl;
