@@ -20,6 +20,22 @@ public class VisLinkSharedTexture : MonoBehaviour
 	private static extern int getTextureHeight(int textureId);
     [DllImport("VLUnityConnector")]
     private static extern int getTextureId(int textureId);
+
+    [DllImport("VLUnityConnector")]
+    private static extern int getSemaphore(int id, string name, int deviceIndex);
+    [DllImport("VLUnityConnector")]
+    private static extern IntPtr GetCreateSemaphoreFunc();
+    [DllImport("VLUnityConnector")]
+    private static extern bool isSemaphoreReady(int sem);
+    [DllImport("VLUnityConnector")]
+    private static extern void semaphoreWriteTexture(int sem, int tex);
+    [DllImport("VLUnityConnector")]
+    private static extern void semaphoreReadTexture(int sem, int tex);
+    [DllImport("VLUnityConnector")]
+    private static extern void semaphoreSignal(int sem);
+    [DllImport("VLUnityConnector")]
+    private static extern void semaphoreWaitForSignal(int sem);
+
     [DllImport("VLUnityConnector")]
 	private static extern IntPtr getMessageQueue(int api, string name);
     [DllImport("VLUnityConnector")]
@@ -58,9 +74,13 @@ public class VisLinkSharedTexture : MonoBehaviour
     private bool initialized = false;
     private bool running = false;
     private int tex;
+    private int textureReady;
+    private int textureComplete;
     private bool isTextureRequested = false;
     private IntPtr startFrame;
     private IntPtr finishFrame;
+    int frame = 0;
+    Texture2D externalTex = null;
 
     // Start is called before the first frame update
     IEnumerator Start()
@@ -78,18 +98,25 @@ public class VisLinkSharedTexture : MonoBehaviour
                 if (client.IsReady())
                 {
                     int api = client.GetAPI();
-                    startFrame = getMessageQueue(api, "start");
-                    finishFrame = getMessageQueue(api, "finish");
+                    startFrame = getMessageQueue(api, textureName+"-start");
+                    finishFrame = getMessageQueue(api, textureName + "-finish");
                     tex = getSharedTexture(api, textureName, 0);
                     GL.IssuePluginEvent(GetCreateTextureFunc(), tex);
+                    textureReady = getSemaphore(api, textureName + "-ready", 0);
+                    textureComplete = getSemaphore(api, textureName + "-complete", 0);
+                    GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureReady);
+                    GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureComplete);
                     isTextureRequested = true;
 
                     /**/
 
                 }
             }
-            else if (isTextureReady(tex))
+            else if (isTextureReady(tex) && isSemaphoreReady(textureReady) && isSemaphoreReady(textureComplete))
             {
+                semaphoreWriteTexture(textureReady, tex);
+                semaphoreReadTexture(textureComplete, tex);
+
                 GameObject view = new GameObject("View");
                 view.transform.parent = transform;
                 cam = view.AddComponent(typeof(Camera)) as Camera;
@@ -101,7 +128,8 @@ public class VisLinkSharedTexture : MonoBehaviour
                 cam.backgroundColor = new Color(0, 0, 0, 0);
 
                 System.IntPtr pointer = new System.IntPtr(getTextureId(tex));
-                Texture2D externalTex = Texture2D.CreateExternalTexture(getTextureWidth(tex), getTextureHeight(tex), TextureFormat.RGBA32, false, false, pointer);
+                Debug.Log(getTextureId(tex));
+                externalTex = Texture2D.CreateExternalTexture(getTextureWidth(tex), getTextureHeight(tex), TextureFormat.ARGB32, false, false, pointer);
                 CommandBuffer commandBuffer = new CommandBuffer();
                 commandBuffer.CopyTexture(rt, externalTex);
                 cam.AddCommandBuffer(CameraEvent.AfterEverything, commandBuffer);
@@ -112,13 +140,12 @@ public class VisLinkSharedTexture : MonoBehaviour
         else
         {
             waitForMessage(startFrame);
-            int frame = queueRecieveInt(startFrame);
+            semaphoreWaitForSignal(textureReady);
+
+            int frameVal = queueRecieveInt(startFrame);
             Matrix4x4 proj = getMatrix4x4(startFrame);
-            //Debug.Log(proj);
             Matrix4x4 view = getMatrix4x4(startFrame);
-            //Debug.Log(view);
             Matrix4x4 model = getMatrix4x4(startFrame);
-            //Debug.Log(model);
 
             cam.projectionMatrix = proj;
             cam.worldToCameraMatrix = view;
@@ -127,11 +154,9 @@ public class VisLinkSharedTexture : MonoBehaviour
             rh_to_lh[0, 0] = -1;
             //rh_to_lh[1, 1] = -1;
             cam.worldToCameraMatrix = rh_to_lh * cam.worldToCameraMatrix * model;
-            //cam.worldToCameraMatrix = cam.worldToCameraMatrix * model;
-
-            //sendMessage(finishFrame);
-            //Debug.Log("frame finished");
             running = true;
+
+            sendMessage(finishFrame);
         }
     }
 
@@ -144,7 +169,9 @@ public class VisLinkSharedTexture : MonoBehaviour
 
             if (running)
             {
-                sendMessage(finishFrame);
+                //sendMessage(finishFrame);
+                semaphoreSignal(textureComplete);
+                frame++;
             }
         }
     }

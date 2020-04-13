@@ -24,6 +24,7 @@ set (HEADERFILES
   net/Server.h
   VisLinkAPI.h
   impl/VisLinkAPIImpl.h
+  sync/SyncStrategy.h
 )
 
 #set(SANDBOX_DIR ${CMAKE_SOURCE_DIR}/../sandbox)

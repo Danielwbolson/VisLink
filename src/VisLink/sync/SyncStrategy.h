@@ -35,6 +35,12 @@ protected:
 	virtual void addObjectImpl(const std::type_info& type, void* val) {}
 };
 
+class EmptySyncStrategy : public SyncStrategy {
+public:
+	virtual void signal() {}
+	virtual void waitForSignal() {}
+};
+
 class CompositeSyncStrategy : public SyncStrategy {
 public:
 	void addChild(SyncStrategy* strategy) {
