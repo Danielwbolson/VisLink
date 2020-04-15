@@ -14,7 +14,7 @@
 
 #include <iostream>
 #include <VisLink/net/Client.h>
-#include <VisLink/impl/VisLinkAPIImpl.h>
+#include <VisLink/impl/VisLinkAPIImpl.h> 
 
 #include "sandbox/image/Image.h"
 
@@ -245,7 +245,7 @@ int main(int argc, char**argv) {
         tex.waitForWrite();
 
         // semaphore wait for texture write avail
-
+		 
         glClearColor(1,1,1,1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glBindVertexArray(vao);

@@ -35,6 +35,7 @@ using namespace sandbox;
 
 #endif
 
+
 struct VisLinkContainer {
 	VisLinkContainer() : api(NULL), isReady(false) {}
 	vislink::VisLinkAPI* api;
@@ -52,8 +53,8 @@ struct TextureContainer {
 
 struct SemaphoreContainer {
 	SemaphoreContainer(int apiId, char* name, int deviceIndex) : name(name), deviceIndex(deviceIndex), apiId(apiId), isReady(false) {
-		//syncStrategy = new vislink::OpenGLSemaphoreSync();
-		syncStrategy = new vislink::EmptySyncStrategy();
+		syncStrategy = new vislink::OpenGLSemaphoreSync();
+		//syncStrategy = new vislink::EmptySyncStrategy();
 	}
 	SemaphoreContainer() {
 		delete syncStrategy;
@@ -63,6 +64,8 @@ struct SemaphoreContainer {
 	int deviceIndex;
 	int apiId;
 	vislink::Semaphore sem;
+	std::vector<int> writeTextures;
+	std::vector<int> readTextures;
 	bool isReady;
 };
 
@@ -133,20 +136,18 @@ extern "C"
 		return semaphores[semId].isReady;
 	}
 
+	EXPORT_API int getSemaphoreId(int semId) { 
+		return semaphores[semId].sem.id + static_cast<vislink::OpenGLSemaphoreSync*>(semaphores[semId].syncStrategy)->semaphore.id*100 + static_cast<vislink::OpenGLSemaphoreSync*>(semaphores[semId].syncStrategy)->semaphore.id*10000;
+	}
+
 	EXPORT_API void semaphoreWriteTexture(int semId, int texId) {
-		semaphores[semId].syncStrategy->addObject(vislink::WriteTexture(getTexture(texId)));
+		//semaphores[semId].syncStrategy->addObject(vislink::WriteTexture(getTexture(texId)));
+		semaphores[semId].writeTextures.push_back(texId);
 	}
 
 	EXPORT_API void semaphoreReadTexture(int semId, int texId) {
-		semaphores[semId].syncStrategy->addObject(vislink::ReadTexture(getTexture(texId)));
-	}
-
-	EXPORT_API void semaphoreSignal(int semId) {
-		semaphores[semId].syncStrategy->signal();
-	}
-
-	EXPORT_API void semaphoreWaitForSignal(int semId) {
-		semaphores[semId].syncStrategy->waitForSignal();
+		//semaphores[semId].syncStrategy->addObject(vislink::ReadTexture(getTexture(texId)));
+		semaphores[semId].readTextures.push_back(texId);
 	}
 
 	EXPORT_API void* getMessageQueue(int api, char* name) {
@@ -200,6 +201,13 @@ OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 	case kUnityGfxDeviceEventShutdown:
 	{
 		s_RendererType = kUnityGfxRendererNull;
+
+		if (s_RendererType == kUnityGfxRendererOpenGLCore) {
+			textures.clear();
+			semaphores.clear();
+			apis.clear();
+		}
+
 		break;
 	}
 	case kUnityGfxDeviceEventBeforeReset:
@@ -211,7 +219,7 @@ OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 		break;
 	}
 	};
-}
+};
 
 // Unity plugin load event
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
@@ -247,7 +255,7 @@ static void UNITY_INTERFACE_API OnCreateTexture(int eventID)
 extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 GetCreateTextureFunc()
 {
-	return OnCreateTexture;
+	return OnCreateTexture; 
 }
 
 // Plugin function to handle a specific rendering event
@@ -272,6 +280,15 @@ static void UNITY_INTERFACE_API OnCreateSemaphore(int eventID)
 	VisLinkContainer& apiContainer = apis[semaphoreContainer.apiId];
 	semaphoreContainer.sem = apiContainer.api->getSemaphore(semaphoreContainer.name, semaphoreContainer.deviceIndex);
 	semaphoreContainer.syncStrategy->addObject(semaphoreContainer.sem);
+
+	for (int f = 0; f < semaphoreContainer.writeTextures.size(); f++) {
+		semaphoreContainer.syncStrategy->addObject(vislink::WriteTexture(getTexture(semaphoreContainer.writeTextures[f])));
+	}
+
+	for (int f = 0; f < semaphoreContainer.readTextures.size(); f++) {
+		semaphoreContainer.syncStrategy->addObject(vislink::ReadTexture(getTexture(semaphoreContainer.readTextures[f])));
+	}
+
 	semaphoreContainer.isReady = true;
 }
 
@@ -279,5 +296,31 @@ static void UNITY_INTERFACE_API OnCreateSemaphore(int eventID)
 extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 GetCreateSemaphoreFunc()
 {
-	return OnCreateSemaphore;
+	return OnCreateSemaphore; 
+}
+
+// Plugin function to handle a specific rendering event
+static void UNITY_INTERFACE_API OnSemaphoreWaitForSignal(int eventID)
+{
+	semaphores[eventID].syncStrategy->waitForSignal();
+}
+
+// Freely defined function to pass a callback to plugin-specific scripts
+extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
+GetSemaphoreWaitForSignalFunc()
+{
+	return OnSemaphoreWaitForSignal;
+}
+
+// Plugin function to handle a specific rendering event
+static void UNITY_INTERFACE_API OnSemaphoreSignal(int eventID)
+{
+	semaphores[eventID].syncStrategy->signal();
+}
+
+// Freely defined function to pass a callback to plugin-specific scripts
+extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API 
+GetSemaphoreSignalFunc()
+{
+	return OnSemaphoreSignal; 
 }

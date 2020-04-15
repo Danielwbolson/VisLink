@@ -148,6 +148,31 @@ void textureInitExtensions(ProcLoader* procLoader) {
 
 #endif
 
+const char * GetGLErrorStr(GLenum err)
+{
+	switch (err)
+	{
+	case GL_NO_ERROR:          return "No error";
+	case GL_INVALID_ENUM:      return "Invalid enum";
+	case GL_INVALID_VALUE:     return "Invalid value";
+	case GL_INVALID_OPERATION: return "Invalid operation";
+	case GL_STACK_OVERFLOW:    return "Stack overflow";
+	case GL_STACK_UNDERFLOW:   return "Stack underflow";
+	case GL_OUT_OF_MEMORY:     return "Out of memory";
+	default:                   return "Unknown error";
+	}
+}
+
+void CheckGLError()
+{
+	/*while (true)
+	{
+		const GLenum err = glGetError();
+		if (GL_NO_ERROR == err)
+			break;
+		std::cout << "GL Error: " << GetGLErrorStr(err) << std::endl;
+	}*/
+}
 
 class OpenGLTextureImpl : public OpenGLTexture {
 public:
@@ -172,20 +197,27 @@ public:
 
 	void signalWrite(Texture& texture) { 
 		GLenum dstLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
-        glSignalSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &dstLayout);
+		glSignalSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &dstLayout);
+		//glSignalSemaphoreEXT(0, 0, nullptr, 1, &texture.id, &dstLayout);
+		//glSignalSemaphoreEXT(1223232, 0, nullptr, 1, &texture.id, &dstLayout);
+		CheckGLError();
 		//std::cout << "signalWrite2" << std::endl; 
 	}
 	void waitForWrite(Texture& texture) {
 		GLenum srcLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
         glWaitSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &srcLayout);
+		CheckGLError();
+		//std::cout << "waitForWrite2" << std::endl;
 	}
 	void signalRead(Texture& texture) {
 		GLenum dstLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
         glSignalSemaphoreEXT(texture.semaphores[1], 0, nullptr, 1, &texture.id, &dstLayout);
+		CheckGLError();
 	}
 	void waitForRead(Texture& texture) {
 		GLenum srcLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
         glWaitSemaphoreEXT(texture.semaphores[1], 0, nullptr, 1, &texture.id, &srcLayout);
+		CheckGLError();
 	}
 };
 
@@ -217,7 +249,7 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
     texture->mem = mem;
     texture->id = externalTexture;
     texture->texture.id = externalTexture;
-    if (false) {
+    if (true) {
     	texture->texture.syncImpl = OpenGLTextureSync::getInstance();
     }
 
@@ -283,6 +315,7 @@ OpenGLSemaphore* createOpenGLSemaphore(const Semaphore& semaphore, ProcLoader* p
 
  	sem->id = externalSemaphore;
  	sem->semaphore.id = externalSemaphore;
+
 	return sem;
 }
 
@@ -314,13 +347,13 @@ void OpenGLSync::read(const Texture& tex) {
 void OpenGLSemaphoreSync::signal() {
 	if (!hasSemaphore) { std::cout << " no semaphore " << std::endl; exit(0); }
 	glSignalSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
-	glFlush();
+	//glFlush();
 }
 
 void OpenGLSemaphoreSync::waitForSignal() {
 	if (!hasSemaphore) { std::cout << " no semaphore " << std::endl; exit(0); }
 	glWaitSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
-	glFlush();
+	//glFlush();
 }
 
 void OpenGLSemaphoreSync::addTexture(unsigned int id, unsigned int layout) {

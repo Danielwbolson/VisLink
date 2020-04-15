@@ -163,7 +163,7 @@ protected:
 	}
 
 
-private:
+public:
 	bool hasSemaphore;
 	Semaphore semaphore;	
 	std::vector<unsigned int> textures;

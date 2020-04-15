@@ -32,9 +32,11 @@ public class VisLinkSharedTexture : MonoBehaviour
     [DllImport("VLUnityConnector")]
     private static extern void semaphoreReadTexture(int sem, int tex);
     [DllImport("VLUnityConnector")]
-    private static extern void semaphoreSignal(int sem);
+    private static extern IntPtr GetSemaphoreSignalFunc();
     [DllImport("VLUnityConnector")]
-    private static extern void semaphoreWaitForSignal(int sem);
+    private static extern IntPtr GetSemaphoreWaitForSignalFunc();
+    [DllImport("VLUnityConnector")]
+    private static extern int getSemaphoreId(int semId);
 
     [DllImport("VLUnityConnector")]
 	private static extern IntPtr getMessageQueue(int api, string name);
@@ -104,8 +106,6 @@ public class VisLinkSharedTexture : MonoBehaviour
                     GL.IssuePluginEvent(GetCreateTextureFunc(), tex);
                     textureReady = getSemaphore(api, textureName + "-ready", 0);
                     textureComplete = getSemaphore(api, textureName + "-complete", 0);
-                    GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureReady);
-                    GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureComplete);
                     isTextureRequested = true;
 
                     /**/
@@ -114,8 +114,16 @@ public class VisLinkSharedTexture : MonoBehaviour
             }
             else if (isTextureReady(tex) && isSemaphoreReady(textureReady) && isSemaphoreReady(textureComplete))
             {
+                //GL.IssuePluginEvent(GetSemaphoreWaitForSignalFunc(), textureReady);
+                initialized = true;
+            }
+            else if (isTextureReady(tex))
+            {
                 semaphoreWriteTexture(textureReady, tex);
                 semaphoreReadTexture(textureComplete, tex);
+
+                GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureReady);
+                GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureComplete);
 
                 GameObject view = new GameObject("View");
                 view.transform.parent = transform;
@@ -133,19 +141,34 @@ public class VisLinkSharedTexture : MonoBehaviour
                 CommandBuffer commandBuffer = new CommandBuffer();
                 commandBuffer.CopyTexture(rt, externalTex);
                 cam.AddCommandBuffer(CameraEvent.AfterEverything, commandBuffer);
+                
 
-                initialized = true;
             }
         }
         else
         {
+
             waitForMessage(startFrame);
-            semaphoreWaitForSignal(textureReady);
+            //semaphoreWaitForSignal(textureReady);
+            Debug.Log(getSemaphoreId(textureReady));
+            //GL.IssuePluginEvent(GetSemaphoreWaitForSignalFunc(), textureReady);
 
             int frameVal = queueRecieveInt(startFrame);
+            //Debug.Log(frameVal);
             Matrix4x4 proj = getMatrix4x4(startFrame);
             Matrix4x4 view = getMatrix4x4(startFrame);
             Matrix4x4 model = getMatrix4x4(startFrame);
+
+            if (frame == 1)
+            {
+                Debug.Log(frame);
+                GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureReady);
+                GL.IssuePluginEvent(GetCreateSemaphoreFunc(), textureComplete);
+            }
+            if (frame >= 1)
+            {
+                GL.IssuePluginEvent(GetSemaphoreWaitForSignalFunc(), textureReady);
+            }
 
             cam.projectionMatrix = proj;
             cam.worldToCameraMatrix = view;
@@ -154,9 +177,10 @@ public class VisLinkSharedTexture : MonoBehaviour
             rh_to_lh[0, 0] = -1;
             //rh_to_lh[1, 1] = -1;
             cam.worldToCameraMatrix = rh_to_lh * cam.worldToCameraMatrix * model;
+
             running = true;
 
-            sendMessage(finishFrame);
+            //sendMessage(finishFrame);
         }
     }
 
@@ -170,7 +194,12 @@ public class VisLinkSharedTexture : MonoBehaviour
             if (running)
             {
                 //sendMessage(finishFrame);
-                semaphoreSignal(textureComplete);
+                Debug.Log("test");
+                Debug.Log(getSemaphoreId(textureComplete));
+                GL.IssuePluginEvent(GetSemaphoreSignalFunc(), textureComplete);
+                sendMessage(finishFrame);
+                //GL.IssuePluginEvent(GetSemaphoreWaitForSignalFunc(), textureReady);
+                //semaphoreSignal(textureComplete);
                 frame++;
             }
         }
