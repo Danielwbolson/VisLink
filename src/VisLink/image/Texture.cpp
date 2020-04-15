@@ -51,6 +51,8 @@ PFNGLGENSEMAPHORESEXTPROC pfnGenSemaphoresEXT;
 PFNGLSIGNALSEMAPHOREEXTPROC pfnSignalSemaphoreEXT;
 #define glWaitSemaphoreEXT pfnWaitSemaphoreEXT
 PFNGLWAITSEMAPHOREEXTPROC pfnWaitSemaphoreEXT;
+#define glIsSemaphoreEXT pfnIsSemaphoreEXT
+PFNGLISSEMAPHOREEXTPROC pfnIsSemaphoreEXT;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
@@ -100,6 +102,8 @@ void textureInitExtensions() {
 			get_proc("glSignalSemaphoreEXT");
 		pfnWaitSemaphoreEXT = (PFNGLWAITSEMAPHOREEXTPROC)
 			get_proc("glWaitSemaphoreEXT");
+		pfnIsSemaphoreEXT = (PFNGLISSEMAPHOREEXTPROC)
+			get_proc("glIsSemaphoreEXT");
 	    initialized = true;
 	    close_libgl();
 		std::cout << "wgl get proc" << std::endl;
@@ -369,5 +373,8 @@ void OpenGLSemaphoreSync::read(const Texture& tex) {
 	addTexture(tex.id, GL_LAYOUT_SHADER_READ_ONLY_EXT);
 }
 
+bool isSemaphore(unsigned int id) {
+	return glIsSemaphoreEXT(id);
+}
 
 }

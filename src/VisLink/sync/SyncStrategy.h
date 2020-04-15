@@ -9,6 +9,8 @@
 
 namespace vislink {
 
+bool isSemaphore(unsigned int id);
+
 class SyncStrategy {
 public:
 	virtual ~SyncStrategy() {}
@@ -177,6 +179,8 @@ public:
 		addChild(new QueueSyncStrategy());
 	}
 };
+
+
 
 }
 

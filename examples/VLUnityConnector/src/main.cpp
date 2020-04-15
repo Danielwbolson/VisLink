@@ -15,6 +15,7 @@
 #include <VisLink/net/Server.h>
 #include <VisLink/net/Client.h>
 #include <VisLink/sync/SyncStrategy.h>
+#include <sstream>
 
 #define WIDTH 512
 #define HEIGHT 512
@@ -86,6 +87,11 @@ vislink::Semaphore& getSemaphore(int id) {
 	return semaphores[id].sem;
 }
 
+std::thread::id firstThreadId;
+std::thread::id secondThreadId;
+std::thread::id renderThreadId;
+bool semaphoreExists;
+
 extern "C"
 {
 	// API methods
@@ -102,6 +108,14 @@ extern "C"
 
 	EXPORT_API void destroyAPI(int id) {
 		//delete getApi(id);
+	}
+
+	EXPORT_API int getThreadId(char* str) {
+		std::stringstream ss;
+		ss << firstThreadId << " " << secondThreadId << " " << renderThreadId << semaphoreExists;
+		std::string s = ss.str();
+		strcpy(str, s.c_str());
+		return s.size();
 	}
 
 	EXPORT_API int getSharedTexture(int id, char* name, int deviceIndex) {
@@ -219,7 +233,7 @@ OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
 		break;
 	}
 	};
-};
+}
 
 // Unity plugin load event
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
@@ -277,17 +291,25 @@ GetCreateAPIFunc()
 static void UNITY_INTERFACE_API OnCreateSemaphore(int eventID)
 {
 	SemaphoreContainer& semaphoreContainer = semaphores[eventID];
-	VisLinkContainer& apiContainer = apis[semaphoreContainer.apiId];
-	semaphoreContainer.sem = apiContainer.api->getSemaphore(semaphoreContainer.name, semaphoreContainer.deviceIndex);
-	semaphoreContainer.syncStrategy->addObject(semaphoreContainer.sem);
 
-	for (int f = 0; f < semaphoreContainer.writeTextures.size(); f++) {
-		semaphoreContainer.syncStrategy->addObject(vislink::WriteTexture(getTexture(semaphoreContainer.writeTextures[f])));
+	if (!semaphoreContainer.isReady) {
+		firstThreadId = std::this_thread::get_id();
+	}
+	else {
+		secondThreadId = std::this_thread::get_id();
 	}
 
-	for (int f = 0; f < semaphoreContainer.readTextures.size(); f++) {
-		semaphoreContainer.syncStrategy->addObject(vislink::ReadTexture(getTexture(semaphoreContainer.readTextures[f])));
-	}
+		VisLinkContainer& apiContainer = apis[semaphoreContainer.apiId];
+		semaphoreContainer.sem = apiContainer.api->getSemaphore(semaphoreContainer.name, semaphoreContainer.deviceIndex);
+		semaphoreContainer.syncStrategy->addObject(semaphoreContainer.sem);
+
+		for (int f = 0; f < semaphoreContainer.writeTextures.size(); f++) {
+			semaphoreContainer.syncStrategy->addObject(vislink::WriteTexture(getTexture(semaphoreContainer.writeTextures[f])));
+		}
+
+		for (int f = 0; f < semaphoreContainer.readTextures.size(); f++) {
+			semaphoreContainer.syncStrategy->addObject(vislink::ReadTexture(getTexture(semaphoreContainer.readTextures[f])));
+		}
 
 	semaphoreContainer.isReady = true;
 }
@@ -302,6 +324,13 @@ GetCreateSemaphoreFunc()
 // Plugin function to handle a specific rendering event
 static void UNITY_INTERFACE_API OnSemaphoreWaitForSignal(int eventID)
 {
+	//OnCreateSemaphore(eventID);	
+	semaphoreExists = vislink::isSemaphore(static_cast<vislink::OpenGLSemaphoreSync*>(semaphores[eventID].syncStrategy)->semaphore.id);
+
+	if (!semaphoreExists) {
+		OnCreateSemaphore(eventID);
+	}
+
 	semaphores[eventID].syncStrategy->waitForSignal();
 }
 
@@ -315,6 +344,14 @@ GetSemaphoreWaitForSignalFunc()
 // Plugin function to handle a specific rendering event
 static void UNITY_INTERFACE_API OnSemaphoreSignal(int eventID)
 {
+	renderThreadId = std::this_thread::get_id();
+	semaphoreExists = vislink::isSemaphore(static_cast<vislink::OpenGLSemaphoreSync*>(semaphores[eventID].syncStrategy)->semaphore.id);
+
+	if (!semaphoreExists) {
+		OnCreateSemaphore(eventID);
+	}
+
+	//OnCreateSemaphore(eventID);
 	semaphores[eventID].syncStrategy->signal();
 }
 
