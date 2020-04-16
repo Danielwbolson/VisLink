@@ -110,6 +110,11 @@ TextureManager::~TextureManager() {
 
 void TextureManager::createSharedTexture(const std::string& name, const TextureInfo& info, int deviceIndex) {
 
+	std::map<std::string,sandbox::Entity*>::iterator it = state->getDeviceState(deviceIndex).imageMap.find(name);
+	if (it != state->getDeviceState(deviceIndex).imageMap.end()) {
+		return;
+	}
+
 	Entity* image = new EntityNode(state->getDeviceState(deviceIndex).images);
         image->addComponent(new Image(info.width, info.height, info.components));
         image->addComponent(new VulkanExternalImage());
