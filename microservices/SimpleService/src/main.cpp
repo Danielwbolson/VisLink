@@ -193,11 +193,12 @@ int main(int argc, char**argv) {
 	vislink::BasicOpenGLSync beginSync;
 	beginSync.addObject(filterStart);
 	beginSync.addObject(api->getSemaphore(serviceName + "-ready"));
-	beginSync.addObject(input);
+	beginSync.addObject(vislink::ReadTexture(input));
+	beginSync.addObject(vislink::WriteTexture(output));
 	vislink::BasicOpenGLSync endSync;
 	endSync.addObject(filterEnd);
 	endSync.addObject(api->getSemaphore(serviceName + "-complete"));
-	endSync.addObject(output);
+	endSync.addObject(vislink::ReadTexture(output));
 
 
     GLuint FramebufferName = 0;
