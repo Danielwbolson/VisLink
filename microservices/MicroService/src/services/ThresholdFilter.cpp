@@ -26,8 +26,8 @@ std::string ThresholdFilter::getFragmentShader() {
 		"void main() { "
 		"   vec4 texColor = texture(inputTexture[0], vec2(1.0-col.x,col.y));"
 		"   colorOut = texColor; "
-		"   if (length(colorOut) < 0.2) { discard; }"
-		"   colorOut = vec4(1.0,0.0,0.0,1); " 
+		"   if (length(colorOut.x) < 0.1) { discard; }"
+		"   colorOut = vec4(1.0,0.0,0.0,1); "  
 		"}"; 
 }
 
