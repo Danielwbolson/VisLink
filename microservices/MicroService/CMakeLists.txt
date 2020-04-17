@@ -8,12 +8,14 @@ set (SOURCEFILES
   src/main.cpp
   src/services/ColorFilter.cpp
   src/services/ThresholdFilter.cpp
+  src/services/OutlineFilter.cpp
 )
 
 set (HEADERFILES
   src/MicroService.h
   src/services/ColorFilter.h
   src/services/ThresholdFilter.h
+  src/services/OutlineFilter.h
 )
 
 # --------------------- Dependencies ----------------------- 

@@ -18,6 +18,7 @@
 #include <VisLink/sync/SyncStrategy.h>
 #include <src/services/ColorFilter.h>
 #include <src/services/ThresholdFilter.h>
+#include <src/services/OutlineFilter.h>
 
 using namespace vislink;
 using namespace std;
@@ -65,6 +66,9 @@ int main(int argc, char**argv) {
 	}	
 	else if (type == "ThresholdFilter") {
 		service = new ThresholdFilter(serviceName, api);
+	}
+	else if (type == "OutlineFilter") {
+		service = new OutlineFilter(serviceName, api);
 	}
 
 	if (service) {

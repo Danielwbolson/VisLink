@@ -143,7 +143,7 @@ int main(int argc, char**argv) {
 }
 
 void renderScene() {
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -281,7 +281,7 @@ void initGL() {
 		""
 		"void main() { "
 		"   vec4 texColor = texture(tex, col.xy);"
-		"   colorOut = texColor; "
+		"   colorOut = vec4(texColor.rgb,1.0); "
 		//"   colorOut = vec4(1,0,0,1); "
 		"}";
 	fshader = compileShader(fragmentShader, GL_FRAGMENT_SHADER);
