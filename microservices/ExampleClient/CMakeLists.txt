@@ -27,6 +27,7 @@ set(DEP_LINK_DIRS ${DEP_LINK_DIRS}
 set(DEP_INCLUDES ${DEP_INCLUDES} 
 	${external_dir}/SandBox/src/src
 	${external_dir}/SandBox/cmake/framework/external/glm/src
+	${external_dir}/SandBox/src/cmake/framework/external/stb/src
 )
 
 set(DEP_LINK_DIRS ${DEP_LINK_DIRS} 

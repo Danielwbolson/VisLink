@@ -22,6 +22,7 @@
 
 #include "sandbox/image/Image.h"
 #include<vector>
+#include<thread>
 
 using namespace sandbox;
 
