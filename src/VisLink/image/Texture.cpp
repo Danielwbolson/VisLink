@@ -169,13 +169,13 @@ const char * GetGLErrorStr(GLenum err)
 
 void CheckGLError()
 {
-	/*while (true)
+	while (true)
 	{
 		const GLenum err = glGetError();
 		if (GL_NO_ERROR == err)
 			break;
 		std::cout << "GL Error: " << GetGLErrorStr(err) << std::endl;
-	}*/
+	}
 }
 
 class OpenGLTextureImpl : public OpenGLTexture {
@@ -248,7 +248,27 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
 #endif
 	glCreateTextures(GL_TEXTURE_2D, 1, &externalTexture);
 
-    glTextureStorageMem2DEXT(externalTexture, 1, GL_RGBA8, tex.width, tex.height, mem, 0 );
+	GLenum internalFormat = GL_RGBA8;
+	switch(tex.format) {
+		case TEXTURE_FORMAT_RGBA8_UNORM:
+			internalFormat = GL_RGBA8;
+			break;
+		case TEXTURE_FORMAT_RGBA16_UNORM:
+			internalFormat = GL_RGBA16;
+			break;
+		case TEXTURE_FORMAT_RGBA32_UINT:
+			internalFormat = GL_RGBA16F;
+			break;
+		case TEXTURE_FORMAT_DEPTH32F:
+			internalFormat = GL_DEPTH_COMPONENT32F;
+			break;
+	};
+
+	std::cout << "Internal format: " <<  internalFormat << " " << tex.format << std::endl;
+
+    glTextureStorageMem2DEXT(externalTexture, 1, internalFormat, tex.width, tex.height, mem, 0 );
+    std::cout << externalTexture << std::endl;
+    CheckGLError();
     OpenGLTextureImpl* texture = new OpenGLTextureImpl(tex);
     texture->mem = mem;
     texture->id = externalTexture;

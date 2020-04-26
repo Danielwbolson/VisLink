@@ -165,7 +165,7 @@ Client::Client(const std::string &serverIP, int serverPort)
 /*  Name the socket, as agreed with the server.  */
 
     address.sun_family = AF_UNIX;
-    strcpy(address.sun_path, "server_socket");
+    strcpy(address.sun_path, "/home/dan/server_socket");
     len = sizeof(address);
 
 /*  Now connect our socket to the server's socket.  */

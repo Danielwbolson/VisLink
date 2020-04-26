@@ -117,7 +117,7 @@ Server::Server(int listenPort, int numExpectedClients) {
     int server_len;
     struct sockaddr_un serv_addr;
     
-    unlink("server_socket");
+    unlink("/home/dan/server_socket");
     if ((serv_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
   		std::cout << "cannot create a socket. socket(AF_INET, SOCK_STREAM, 0) failed" << std::endl;
         exit(1);
@@ -131,7 +131,7 @@ Server::Server(int listenPort, int numExpectedClients) {
     }
     
     serv_addr.sun_family = AF_UNIX;
-    strcpy(serv_addr.sun_path, "server_socket");
+    strcpy(serv_addr.sun_path, "/home/dan/server_socket");
     server_len = sizeof(serv_addr);
     
     if (::bind(serv_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) == -1) {

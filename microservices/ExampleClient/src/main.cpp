@@ -30,7 +30,7 @@ using namespace std;
 
 void initGLFW();
 void initGL();
-void initFramebuffer(int width, int height, GLuint textureId);
+void initFramebuffer(int width, int height, GLuint textureId, GLuint depthTextureId);
 void renderScene();
 
 GLFWwindow* window;
@@ -75,6 +75,8 @@ int main(int argc, char**argv) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
 	// VisLink Connection
@@ -84,8 +86,36 @@ int main(int argc, char**argv) {
 	MicroService colorFilter(serviceName, api);
 	vislink::Texture input = colorFilter.addTexture(inputTextureName, MICROSERVICE_INPUT_TEXTURE);
 	vislink::Texture output = colorFilter.addTexture(outputTextureName, MICROSERVICE_OUTPUT_TEXTURE);
+	vislink::TextureInfo texInfo;
+	texInfo.width = 1024;
+	texInfo.height = 1024;
+	texInfo.components = 4;
+	texInfo.format = vislink::TEXTURE_FORMAT_DEPTH32F;
+	api->createSharedTexture("depth", texInfo, 0);
+	std::cout << "Depth2: " << std::endl;
+	vislink::Texture depth = api->getSharedTexture("depth");
+	std::cout << "Depth: " << depth.id << std::endl;
 
-	initFramebuffer(input.width, input.height, input.id);
+	//glGenTextures(1, &depth.id);
+	glBindTexture(GL_TEXTURE_2D, depth.id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	//NULL means reserve texture memory, but texels are undefined
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	
+	/*glTexImage2D(
+	  GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 1024, 1024, 0, 
+	  GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL
+	);*/
+	glBindTexture(GL_TEXTURE_2D, 0);
+	std::cout << "Depth: " << depth.id << std::endl;
+
+	initFramebuffer(input.width, input.height, input.id, depth.id);
 
     int frame = 0;
     double lastTime = glfwGetTime();
@@ -107,6 +137,8 @@ int main(int argc, char**argv) {
 			queue->sendObject(glm::vec4(0, 1, 0, 1));
 			colorFilter.end();
 			outputTexture = output.id;
+			outputTexture = depth.id;
+
 		}
 
 		// Draw final result
@@ -329,8 +361,17 @@ void initGL() {
 		"layout(location = 0) out vec4 colorOut;"
 		"uniform sampler2D tex; "
 		""
+		"vec4 LinearizeDepth(in vec2 uv) { "
+		"    float zNear = 0.1;  "
+		"    float zFar  = 100.0; "
+		"    float depth = texture(tex, uv).x; "
+		"    float c = (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear)); "
+		"    return vec4(c,c,c,1);"
+		"} "
+		""
 		"void main() { "
-		"   vec4 texColor = texture(tex, col.xy);"
+		"	vec4 texColor = LinearizeDepth(col.xy);"
+		//"   vec4 texColor = texture(tex, col.xy);"
 		"   colorOut = texColor; "
 		"}";
 	fshaderOutput = compileShader(fragmentShaderOutput, GL_FRAGMENT_SHADER);
@@ -344,7 +385,7 @@ void initGL() {
 
 }
 
-void initFramebuffer(int width, int height, GLuint textureId) {
+void initFramebuffer(int width, int height, GLuint textureId, GLuint depthTextureId) {
 	glGenFramebuffers(1, &FramebufferName);
 	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
 
@@ -356,19 +397,29 @@ void initFramebuffer(int width, int height, GLuint textureId) {
 	GLuint depthrenderbuffer;
 	glGenRenderbuffers(1, &depthrenderbuffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
 
+	std::cout << width << " " << height << std::endl;
+
 	// Set "renderedTexture" as our colour attachement #0
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureId, 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureId, 0);
+	//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthTextureId, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0/*mipmap level*/);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0/*mipmap level*/);
+
 
 	// Set the list of draw buffers.
 	GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
 	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
 
 	// Always check that our framebuffer is ok
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		GLenum status;
+		status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
+		std::cout << "Error in framebuffer " << status << std::endl;
 		return;
+	}
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {

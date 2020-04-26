@@ -15,10 +15,19 @@ public:
 	virtual VLProc getProc(const char* name) = 0;
 };
 
+enum TextureFormat {
+	TEXTURE_FORMAT_RGBA8_UNORM = 0,
+	TEXTURE_FORMAT_RGBA16_UNORM = 1,
+	TEXTURE_FORMAT_RGBA32_UINT = 2,
+	TEXTURE_FORMAT_DEPTH32F = 3
+};
+
 struct TextureInfo {
+	TextureInfo() : format(TEXTURE_FORMAT_RGBA8_UNORM) {}
 	int width;
 	int height;
 	int components;
+	TextureFormat format;
 };
 
 struct Texture;

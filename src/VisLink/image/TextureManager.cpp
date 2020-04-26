@@ -55,6 +55,7 @@ struct TextureManagerDeviceState {
 	Entity* images;
 	Entity* semaphores;
 	std::map<std::string, Entity*> imageMap;
+	std::map<std::string, TextureInfo> imageInfo;
 	std::map<std::string, Entity*> semaphoreMap;
 };
 
@@ -115,9 +116,30 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 		return;
 	}
 
+	VkFormat format = VK_FORMAT_UNDEFINED;
+	VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	std::cout << "Created format: " << info.format << std::endl;
+
+	switch(info.format) {
+		case TEXTURE_FORMAT_RGBA8_UNORM:
+			format = VK_FORMAT_R8G8B8A8_UNORM;
+			break;
+		case TEXTURE_FORMAT_RGBA16_UNORM:
+			format = VK_FORMAT_R16G16B16A16_UNORM;
+			break;
+		case TEXTURE_FORMAT_RGBA32_UINT:
+			format = VK_FORMAT_R32G32B32A32_UINT;
+			break;
+		case TEXTURE_FORMAT_DEPTH32F:
+			format = VK_FORMAT_D32_SFLOAT;
+			usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			break;
+	};
+
 	Entity* image = new EntityNode(state->getDeviceState(deviceIndex).images);
         image->addComponent(new Image(info.width, info.height, info.components));
-        image->addComponent(new VulkanExternalImage());
+        image->addComponent(new VulkanExternalImage(true, format, usage));
         for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
         	image->addComponent(new VulkanSemaphore(true));
         }
@@ -125,6 +147,8 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 	state->instanceNode.update();
 	state->getDeviceState(deviceIndex).renderer->render(VULKAN_RENDER_UPDATE_SHARED);
     state->getDeviceState(deviceIndex).imageMap[name] = image;
+    state->getDeviceState(deviceIndex).imageInfo[name] = info;
+    
 	//externalHandle = 
 
     std::vector<VulkanSemaphore*> semaphores = image->getComponents<VulkanSemaphore>();
@@ -137,10 +161,12 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 Texture TextureManager::getSharedTexture(const std::string& name, int deviceIndex) {
 	Entity* imageNode = state->getDeviceState(deviceIndex).imageMap[name];
 	Image* image = imageNode->getComponent<Image>();
+	TextureInfo info = state->getDeviceState(deviceIndex).imageInfo[name];
 	Texture tex;
-	tex.width = image->getWidth();
-	tex.height = image->getHeight();
-	tex.components = image->getComponents();
+	tex.width = info.width;
+	tex.height = info.height;
+	tex.components = info.components;
+	tex.format = info.format;
 	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->getDeviceState(deviceIndex).renderer->getContext());
 	tex.deviceIndex = deviceIndex;
 
