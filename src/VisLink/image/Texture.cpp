@@ -351,7 +351,7 @@ void OpenGLSync::read(const Texture& tex) {
 void OpenGLSemaphoreSync::signal() {
 	if (!hasSemaphore) { std::cout << " no semaphore " << std::endl; exit(0); }
 	glSignalSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
-	//glFlush();
+	glFlush();
 }
 
 void OpenGLSemaphoreSync::waitForSignal() {

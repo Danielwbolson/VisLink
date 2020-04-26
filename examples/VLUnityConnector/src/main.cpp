@@ -354,6 +354,7 @@ static void UNITY_INTERFACE_API OnSemaphoreSignal(int eventID)
 
 	//OnCreateSemaphore(eventID);
 	semaphores[eventID].syncStrategy->signal();
+	//glFlush();
 }
 
 // Freely defined function to pass a callback to plugin-specific scripts
