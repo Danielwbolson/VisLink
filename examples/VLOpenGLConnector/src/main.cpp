@@ -52,15 +52,19 @@ extern "C"
 		texInfo.width = 1024;
 		texInfo.height = 1024;
 		texInfo.components = 4;
+		if (texName == "webgl[2]") {
+			texInfo.format = vislink::TEXTURE_FORMAT_DEPTH32F;
+		}
+		else {
+			texInfo.format = vislink::TEXTURE_FORMAT_RGBA16_UNORM;
+		}
 		static_cast<VisLinkAPI*>(api)->createSharedTexture(texName, texInfo, deviceIndex);
 		return 1;
 	}
 
 	EXPORT_API int getSharedTexture(void* api, char* name, int deviceIndex) {
 		std::string texName(name);
-		std::cout << "getting" << std::endl;
 		Texture tex = static_cast<VisLinkAPI*>(api)->getSharedTexture(texName, deviceIndex);
-		std::cout << "setting" << std::endl;
 		return tex.id;
 	}
 

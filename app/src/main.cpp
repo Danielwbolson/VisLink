@@ -215,8 +215,8 @@ int main(int argc, char**argv) {
             api = server;
             Image* image = mainImage.getComponent<Image>();
             vislink::TextureInfo texInfo;
-            texInfo.width = image->getWidth();
-            texInfo.height = image->getHeight();
+            texInfo.width = 1024;//image->getWidth();
+            texInfo.height = 1024;//image->getHeight();
             texInfo.components = image->getComponents();
             std::cout << "Create test.png" << std::endl;
             api->createSharedTexture("test.png", texInfo);
