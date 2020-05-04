@@ -279,7 +279,7 @@ int main(int argc, char**argv) {
 
 
 
-		glfwPollEvents();
+		glfwWaitEvents();
 
 
         if (frame % 100 == 0) {
