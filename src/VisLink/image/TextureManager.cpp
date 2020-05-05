@@ -56,6 +56,7 @@ struct TextureManagerDeviceState {
 	Entity* semaphores;
 	std::map<std::string, Entity*> imageMap;
 	std::map<std::string, TextureInfo> imageInfo;
+	std::map<std::string, unsigned int> imageId;
 	std::map<std::string, Entity*> semaphoreMap;
 };
 
@@ -145,6 +146,10 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 	state->getDeviceState(deviceIndex).renderer->render(VULKAN_RENDER_UPDATE_SHARED);
     state->getDeviceState(deviceIndex).imageMap[name] = image;
     state->getDeviceState(deviceIndex).imageInfo[name] = info;
+
+	static unsigned int numImages = 0;
+	state->getDeviceState(deviceIndex).imageId[name] = numImages;
+	numImages++;
     
 	//externalHandle = 
 
@@ -162,6 +167,7 @@ Texture TextureManager::getSharedTexture(const std::string& name, int deviceInde
 	tex.format = info.format;
 	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->getDeviceState(deviceIndex).renderer->getContext());
 	tex.deviceIndex = deviceIndex;
+	tex.visLinkId = state->getDeviceState(deviceIndex).imageId[name];
 
 	return tex;
 }

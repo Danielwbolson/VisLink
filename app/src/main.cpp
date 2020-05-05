@@ -249,6 +249,7 @@ int main(int argc, char**argv) {
     api = new vislink::VisLinkOpenGL(api);
     vislink::Texture tex = api->getSharedTexture("test.png");
     externalTexture = tex.id;
+	std::cout << "VisLink ID: " << tex.visLinkId << std::endl;
 
     if (!server &&  argc == 2) {
     	GLuint format = GL_RGBA; 
@@ -267,6 +268,7 @@ int main(int argc, char**argv) {
     if (argc == 3) {
         renderTex = api->getSharedTexture("render");
         externalTexture = renderTex.id;
+		std::cout << "VisLink ID: " << renderTex.visLinkId << std::endl;
     }
 
 
