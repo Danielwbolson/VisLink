@@ -192,39 +192,6 @@ public:
 	Texture texture;
 };
 
-class OpenGLTextureSync : public TextureSync {
-public:
-	static TextureSync* getInstance() {
-		static OpenGLTextureSync sync;
-		return &sync;
-	}
-
-	void signalWrite(Texture& texture) { 
-		GLenum dstLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
-		glSignalSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &dstLayout);
-		//glSignalSemaphoreEXT(0, 0, nullptr, 1, &texture.id, &dstLayout);
-		//glSignalSemaphoreEXT(1223232, 0, nullptr, 1, &texture.id, &dstLayout);
-		CheckGLError();
-		//std::cout << "signalWrite2" << std::endl; 
-	}
-	void waitForWrite(Texture& texture) {
-		GLenum srcLayout = GL_LAYOUT_COLOR_ATTACHMENT_EXT;
-        glWaitSemaphoreEXT(texture.semaphores[0], 0, nullptr, 1, &texture.id, &srcLayout);
-		CheckGLError();
-		//std::cout << "waitForWrite2" << std::endl;
-	}
-	void signalRead(Texture& texture) {
-		GLenum dstLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
-        glSignalSemaphoreEXT(texture.semaphores[1], 0, nullptr, 1, &texture.id, &dstLayout);
-		CheckGLError();
-	}
-	void waitForRead(Texture& texture) {
-		GLenum srcLayout = GL_LAYOUT_SHADER_READ_ONLY_EXT;
-        glWaitSemaphoreEXT(texture.semaphores[1], 0, nullptr, 1, &texture.id, &srcLayout);
-		CheckGLError();
-	}
-};
-
 OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
 
 	
@@ -273,32 +240,6 @@ OpenGLTexture* createOpenGLTexture(const Texture& tex, ProcLoader* procLoader) {
     texture->mem = mem;
     texture->id = externalTexture;
     texture->texture.id = externalTexture;
-    if (true) {
-    	texture->texture.syncImpl = OpenGLTextureSync::getInstance();
-    }
-
-#ifdef WIN32
-    HANDLE semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
-	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-		semaphoreFDs[f] = tex.externalSemaphores[f];
-	}
-#else
-    int semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
-	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-		semaphoreFDs[f] = dup(tex.externalSemaphores[f]);
-	}
-#endif
-
-	glGenSemaphoresEXT(NUM_TEXTURE_SEMAPHORES, texture->texture.semaphores);
-
-	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-#ifdef WIN32
-		glImportSemaphoreWin32HandleEXT(texture->texture.semaphores[f], GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, semaphoreFDs[f]);
-#else
- 		glImportSemaphoreFdEXT(texture->texture.semaphores[f], GL_HANDLE_TYPE_OPAQUE_FD_EXT, semaphoreFDs[f]);
-#endif
-	}
-
 
 	return texture;
 }
@@ -342,31 +283,6 @@ OpenGLSemaphore* createOpenGLSemaphore(const Semaphore& semaphore, ProcLoader* p
 
 	return sem;
 }
-
-void OpenGLSync::signal(const Semaphore& semaphore) {
-	glSignalSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
-	glFlush();
-}
-
-
-void OpenGLSync::waitForSignal(const Semaphore& semaphore) {
-	glWaitSemaphoreEXT(semaphore.id, 0, nullptr, textures.size(), &textures[0], &layouts[0]);
-	glFlush();
-}
-
-void OpenGLSync::addTexture(unsigned int id, unsigned int layout) {
-	textures.push_back(id);
-	layouts.push_back(layout);
-}
-
-void OpenGLSync::write(const Texture& tex) {
-	addTexture(tex.id, GL_LAYOUT_COLOR_ATTACHMENT_EXT);
-}
-
-void OpenGLSync::read(const Texture& tex) {
-	addTexture(tex.id, GL_LAYOUT_SHADER_READ_ONLY_EXT);
-}
-
 
 void OpenGLSemaphoreSync::signal() {
 	if (!hasSemaphore) { std::cout << " no semaphore " << std::endl; exit(0); }

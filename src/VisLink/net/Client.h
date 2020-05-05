@@ -49,21 +49,11 @@ public:
 
         HANDLE serverProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
 		tex.externalHandle = getExternalHandle(serverProcess, tex.externalHandle);
-		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-			tex.externalSemaphores[f] = getExternalHandle(serverProcess, tex.externalSemaphores[f]);
-		}
 		//tex.externalHandle = 0;
 #else
 		int fd = NetInterface::recvfd(socketFD);
-		int semaphoreFDs[NUM_TEXTURE_SEMAPHORES];
-		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-			semaphoreFDs[f] = NetInterface::recvfd(socketFD);
-		}
 		receiveData(socketFD, (unsigned char*)& tex, sizeof(tex));
 		tex.externalHandle = fd;
-		for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-			tex.externalSemaphores[f] = semaphoreFDs[f];
-		}
 #endif
 		return tex;
 	}

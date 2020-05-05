@@ -30,37 +30,16 @@ struct TextureInfo {
 	TextureFormat format;
 };
 
-struct Texture;
-
-class TextureSync {
-public:
-	virtual void signalWrite(Texture& texture) = 0;
-	virtual void waitForWrite(Texture& texture) = 0;
-	virtual void signalRead(Texture& texture) = 0;
-	virtual void waitForRead(Texture& texture) = 0;
-};
-
-#define NUM_TEXTURE_SEMAPHORES 2
-
 struct Texture : TextureInfo { 
-	Texture() : syncImpl(NULL) {}
+	Texture() {}
 #ifdef WIN32
 	HANDLE externalHandle;
-	HANDLE externalSemaphores[NUM_TEXTURE_SEMAPHORES];
 #else
 	unsigned int externalHandle;
-	unsigned int externalSemaphores[NUM_TEXTURE_SEMAPHORES];
 #endif
 	unsigned int id;
-	unsigned int semaphores[NUM_TEXTURE_SEMAPHORES];
 	int deviceIndex;
-	
-	void signalWrite() { if(syncImpl) {syncImpl->signalWrite(*this);} }
-	void waitForWrite() { if(syncImpl) {syncImpl->waitForWrite(*this);} }
-	void signalRead() { if(syncImpl) {syncImpl->signalRead(*this);} }
-	void waitForRead() { if(syncImpl) {syncImpl->waitForRead(*this);} }
-
-	TextureSync* syncImpl;
+	unsigned int visLinkId;
 };
 
 class OpenGLTexture {

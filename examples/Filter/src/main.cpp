@@ -242,7 +242,7 @@ int main(int argc, char**argv) {
 
         //std::cout << "Waiting" << std::endl;
         filterStart->waitForMessage();
-        tex.waitForWrite();
+        //tex.waitForWrite();
 
         // semaphore wait for texture write avail
 		 
@@ -260,7 +260,7 @@ int main(int argc, char**argv) {
         // semaphore signal texture shader read
         //glFinish();
 
-        tex.signalRead();
+        //tex.signalRead();
         filterEnd->sendMessage();
 
     }

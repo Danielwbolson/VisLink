@@ -330,11 +330,11 @@ int main(int argc, char**argv) {
 		startFrame->sendObject<int>(frame);
 		finishFrame->waitForMessage();*/
         if (argc == 3) {
-            renderTex.signalWrite();
+            //renderTex.signalWrite();
             filterStart->sendMessage();
 
             filterEnd->waitForMessage(); 
-            renderTex.waitForRead();
+            //renderTex.waitForRead();
         }
 
 		glfwMakeContextCurrent(window);

@@ -140,9 +140,6 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 	Entity* image = new EntityNode(state->getDeviceState(deviceIndex).images);
         image->addComponent(new Image(info.width, info.height, info.components));
         image->addComponent(new VulkanExternalImage(true, format, usage));
-        for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-        	image->addComponent(new VulkanSemaphore(true));
-        }
 
 	state->instanceNode.update();
 	state->getDeviceState(deviceIndex).renderer->render(VULKAN_RENDER_UPDATE_SHARED);
@@ -152,10 +149,6 @@ void TextureManager::createSharedTexture(const std::string& name, const TextureI
 	//externalHandle = 
 
     std::vector<VulkanSemaphore*> semaphores = image->getComponents<VulkanSemaphore>();
-    for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-        //tex.externalSemaphores[f] = semaphores[f]->getExternalHandle(); 
-        std::cout << "" << " " << semaphores[f]->getExternalHandle() << std::endl;
-    }
 }
 
 Texture TextureManager::getSharedTexture(const std::string& name, int deviceIndex) {
@@ -169,12 +162,6 @@ Texture TextureManager::getSharedTexture(const std::string& name, int deviceInde
 	tex.format = info.format;
 	tex.externalHandle = imageNode->getComponent<VulkanExternalImage>()->getExternalHandle(state->getDeviceState(deviceIndex).renderer->getContext());
 	tex.deviceIndex = deviceIndex;
-
-	std::vector<VulkanSemaphore*> semaphores = imageNode->getComponents<VulkanSemaphore>();
-	for (int f = 0; f < NUM_TEXTURE_SEMAPHORES; f++) {
-		tex.externalSemaphores[f] = semaphores[f]->getExternalHandle();
-		std::cout << tex.externalSemaphores[f] << " " << semaphores[f]->getExternalHandle() << std::endl;
-	}
 
 	return tex;
 }

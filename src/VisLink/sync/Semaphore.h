@@ -9,17 +9,9 @@
 
 namespace vislink {
 
-struct Semaphore;
-
-class SyncMethod {
-public:
-	virtual ~SyncMethod() {}
-	virtual void signal(const Semaphore& semaphore) = 0;
-	virtual void waitForSignal(const Semaphore& semaphore) = 0;
-};
 
 struct Semaphore {
-	Semaphore() : method(NULL) {}
+	Semaphore() {}
 	Semaphore(const Semaphore& sem) {
 		*this = sem;
 	}
@@ -27,13 +19,9 @@ struct Semaphore {
 		this->id = sem.id;
 		this->externalHandle = sem.externalHandle;
 		this->deviceIndex = sem.deviceIndex;
-		this->method = NULL;
 		return *this;
 	}
 	~Semaphore() {
-		if (method) {
-			delete method;
-		}
 	}
 
 	unsigned int id;
@@ -44,18 +32,6 @@ struct Semaphore {
 	unsigned int externalHandle;
 #endif
 
-	void signal() { if (method) { method->signal(*this); }}
-	void waitForSignal() { if (method) { method->waitForSignal(*this); }}
-
-	void setSyncMethod(SyncMethod* method) {
-		if (this->method) {
-			delete this->method;
-		}
-		this->method = method;
-	}
-	
-private:
-	SyncMethod* method;
 };
 
 class OpenGLSemaphore {
@@ -66,19 +42,6 @@ public:
 };
 
 OpenGLSemaphore* createOpenGLSemaphore(const Semaphore& semaphore, ProcLoader* procLoader = NULL);
-
-class OpenGLSync : public SyncMethod {
-public:
-	void signal(const Semaphore& semaphore);
-	void waitForSignal(const Semaphore& semaphore);
-
-	void addTexture(unsigned int id, unsigned int layout);
-	void write(const Texture& tex);
-	void read(const Texture& tex);
-private:
-	std::vector<unsigned int> textures;
-	std::vector<unsigned int> layouts;
-};
 
 }
 
