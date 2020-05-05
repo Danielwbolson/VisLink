@@ -18,7 +18,7 @@ public class VisLinkSharedTexture : MonoBehaviour
     [DllImport("VLUnityConnector")]
     private static extern int getTextureWidth(int textureId);
     [DllImport("VLUnityConnector")]
-	private static extern int getTextureHeight(int textureId);
+    private static extern int getTextureHeight(int textureId);
     [DllImport("VLUnityConnector")]
     private static extern int getTextureId(int textureId);
 
@@ -40,11 +40,11 @@ public class VisLinkSharedTexture : MonoBehaviour
     private static extern int getSemaphoreId(int semId);
 
     [DllImport("VLUnityConnector")]
-	private static extern IntPtr getMessageQueue(int api, string name);
+    private static extern IntPtr getMessageQueue(int api, string name);
     [DllImport("VLUnityConnector")]
-	private static extern void waitForMessage(IntPtr msgQueue);
+    private static extern void waitForMessage(IntPtr msgQueue);
     [DllImport("VLUnityConnector")]
-	private static extern void sendMessage(IntPtr msgQueue);
+    private static extern void sendMessage(IntPtr msgQueue);
     [DllImport("VLUnityConnector")]
     private static extern int queueRecieveInt(IntPtr msgQueue);
     [DllImport("VLUnityConnector")]
@@ -106,7 +106,8 @@ public class VisLinkSharedTexture : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update() {
+    void Update()
+    {
         if (!initialized)
         {
             if (!isTextureRequested)
@@ -115,7 +116,7 @@ public class VisLinkSharedTexture : MonoBehaviour
                 if (client.IsReady())
                 {
                     int api = client.GetAPI();
-                    startFrame = getMessageQueue(api, textureName+"-start");
+                    startFrame = getMessageQueue(api, textureName + "-start");
                     finishFrame = getMessageQueue(api, textureName + "-finish");
                     tex = getSharedTexture(api, textureName, 0);
                     GL.IssuePluginEvent(GetCreateTextureFunc(), tex);
@@ -147,7 +148,7 @@ public class VisLinkSharedTexture : MonoBehaviour
                 //Debug.Log("" + getTextureWidth(tex) + " " + getTextureHeight(tex) + " " +getTextureId(tex));
                 rt.Create();
                 cam.targetTexture = rt;
-                cam.clearFlags = CameraClearFlags.SolidColor; 
+                cam.clearFlags = CameraClearFlags.SolidColor;
                 cam.backgroundColor = new Color(0, 0, 0, 0);
 
                 System.IntPtr pointer = new System.IntPtr(getTextureId(tex));
@@ -207,6 +208,7 @@ public class VisLinkSharedTexture : MonoBehaviour
             rh_to_lh[0, 0] = -1;
             //rh_to_lh[1, 1] = -1;
             cam.worldToCameraMatrix = rh_to_lh * cam.worldToCameraMatrix * model;
+            //cam.worldToCameraMatrix = rh_to_lh * cam.worldToCameraMatrix * rh_to_lh * model;
 
             running = true;
 
@@ -217,7 +219,7 @@ public class VisLinkSharedTexture : MonoBehaviour
             currentFrame++;
 
             //sendMessage(finishFrame);
-            Thread.Sleep(100);
+            //Thread.Sleep(100);
         }
     }
 
