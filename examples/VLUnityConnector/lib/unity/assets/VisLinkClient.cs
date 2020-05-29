@@ -16,6 +16,7 @@ public class VisLinkClient : MonoBehaviour
     public string address = "127.0.0.1";
     public int port = 3457;
     private int api;
+    private bool init = false;
 
     public int GetAPI()
     {
@@ -36,14 +37,13 @@ public class VisLinkClient : MonoBehaviour
     }
 
 
-    bool init = false;
     // Update is called once per frame
     void Update()
     {
         if (!init)
         {
-            Debug.Log("Update client");
-            init = true;
+            init = IsReady();
         }
+        
     }
 }

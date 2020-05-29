@@ -185,9 +185,22 @@ extern "C"
 		return queue->receiveObject<int>();  
 	}
 
+	EXPORT_API void queueSendInt(void* msgQueue, int val) {
+		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
+		return queue->sendObject<int>(val);
+	}
+
 	EXPORT_API void queueRecieveFloatArray(void* msgQueue, float* arr, int size) {
 		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
 		queue->receiveData((unsigned char*)arr, size * sizeof(float));
+	}
+
+	EXPORT_API int queueReceiveString(void* msgQueue, char* str) {
+		vislink::MessageQueue* queue = static_cast<vislink::MessageQueue*>(msgQueue);
+		int len = queue->receiveObject<int>();
+		queue->receiveData((unsigned char*)str, len);
+		str[len] = '\0';
+		return len;
 	}
 }
 
