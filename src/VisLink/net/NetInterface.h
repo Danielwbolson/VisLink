@@ -2,14 +2,8 @@
 #define VISLINK_NET_NET_INTERFACE_H_
 
 #ifdef WIN32
-#include <winsock2.h>
-#include <windows.h>
 #include <stdint.h>
-#include <ws2tcpip.h>
 #include <stdio.h>
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
 #else
 #define SOCKET int
 #include "stdint.h"
@@ -40,6 +34,21 @@
 	#include <sys/socket.h>  
 	#include <netinet/in.h>  
 	#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
+#endif
+
+#ifndef WIN32_LEAN_AND_MEAN
+#ifndef _WINSOCK2API_
+#ifndef _WINSOCKAPI_
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
+
+#endif
+#endif
 #endif
 
 #include "VisLink/VisLinkAPI.h"
