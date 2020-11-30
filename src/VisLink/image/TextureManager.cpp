@@ -1,3 +1,4 @@
+#ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -193,3 +194,5 @@ Semaphore TextureManager::getSemaphore(const std::string& name, int deviceIndex)
 }
 
 }
+
+#endif // STB_IMAGE_IMPLEMENTATION
