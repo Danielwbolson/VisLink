@@ -1,5 +1,6 @@
-#ifndef STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
+//#ifndef STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
+//#endif
 #include "stb_image.h"
 
 #include "VisLink/image/TextureManager.h"
@@ -195,4 +196,6 @@ Semaphore TextureManager::getSemaphore(const std::string& name, int deviceIndex)
 
 }
 
-#endif // STB_IMAGE_IMPLEMENTATION
+//#ifdef STB_IMAGE_IMPLEMENTATION
+//#undef STB_IMAGE_IMPLEMENTATION
+//#endif
