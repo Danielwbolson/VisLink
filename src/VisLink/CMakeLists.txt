@@ -52,7 +52,7 @@ include_directories(${external_dir}/glm/src)
 
 set(SandBoxArgs -DWITH_APPS=OFF -DCMAKE_DEBUG_POSTFIX=d)
 add_external(SandBox 
-	GIT_REPOSITORY https://github.com/Danielwbolson/sandbox.git
+	GIT_REPOSITORY https://github.com/OpenSpace-VisLink/sandbox.git
 	CMAKE_ARGS SandBoxArgs
   	GIT_TAG vulkan-refactor
 	LIB_NAME sandbox

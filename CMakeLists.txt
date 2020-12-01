@@ -7,7 +7,7 @@ set(CMAKE_FRAMEWORK_DIR ${CMAKE_SOURCE_DIR}/cmake/framework)
 if(NOT EXISTS ${CMAKE_FRAMEWORK_DIR})
 execute_process(
 		#COMMAND git clone ${PROJECT_SOURCE_DIR}/.. ${CMAKE_FRAMEWORK_DIR}
-		COMMAND git clone https://github.com/dtorban/cmake_fw.git ${CMAKE_FRAMEWORK_DIR}
+		COMMAND git clone https://github.com/OpenSpace-VisLink/cmake_fw.git ${CMAKE_FRAMEWORK_DIR}
 )
 endif()
 
