@@ -5,7 +5,9 @@
 #include "OpenGL.h"
 #include <GLFW/glfw3.h>
 
-#define STB_IMAGE_IMPLEMENTATION
+//#ifndef STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
+//#endif
 #include "stb_image.h"
 
 #define GLM_FORCE_RADIANS

@@ -195,7 +195,3 @@ Semaphore TextureManager::getSemaphore(const std::string& name, int deviceIndex)
 }
 
 }
-
-//#ifdef STB_IMAGE_IMPLEMENTATION
-//#undef STB_IMAGE_IMPLEMENTATION
-//#endif
